@@ -58,14 +58,6 @@ ClassifyReport <- function(ReportType , patterns , data){
 rm(ONEpattern)
 
 
-TotalList$ReportType <- ClassifyReport("105" , c("105") , TotalList)
-TotalList$ReportType <- ClassifyReport("705A" , c("705A" , "705 A") , TotalList)
-TotalList$ReportType <- ClassifyReport("705B" , c("705B" , "705 B") , TotalList)
-TotalList$ReportType <- ClassifyReport("710" , c("710") , TotalList)
-TotalList$ReportType <- ClassifyReport("711B" , c("711B") , TotalList)
-TotalList$ReportType <- ClassifyReport("717" , c("717") , TotalList)
-TotalList$ReportType <- ClassifyReport("718" , c("718") , TotalList)
-
 TotalList$ReportType <- ClassifyReport("Analysis" , c("Analysis.xls") , TotalList)
 TotalList$ReportType <- ClassifyReport("Hospital Administrative Statistics" , c("Hospital Adm" ,
                                                                                 "ADMIN STATISTICS" ,
@@ -89,9 +81,21 @@ TotalList$ReportType <- ClassifyReport("Inpatient Mortality and Morbidity" ,
                                        TotalList)
 TotalList$ReportType <- ClassifyReport("Inpatient Administrative Statistics" ,
                                        c("Inpatient Adm" , "In patient Adm") , TotalList)
-TotalList$ReportType <- ClassifyReport("Service Delivery" , c("service delivery" ,
+TotalList$ReportType <- ClassifyReport("Service Delivery Summary" , c("service delivery" ,
                                                               "Service Delvery" ,
                                                               "SERVICE DELIVERLY") , TotalList)
 TotalList$ReportType <- ClassifyReport("Workload" , "WORKLOAD" , TotalList)
+
+TotalList$ReportType <- ClassifyReport("105 - Service Delivery Summary" , c("105") , TotalList)
+TotalList$ReportType <- ClassifyReport("705A - Outpatient Summary <5" , c("705A" , "705 A") , TotalList)
+TotalList$ReportType <- ClassifyReport("705B - Outpatient Summary >5" , c("705B" , "705 B") , TotalList)
+TotalList$ReportType <- ClassifyReport("710 - Immunization Summary" , c("710") , TotalList)
+TotalList$ReportType <- ClassifyReport("711B - RH, TB, Malaria, HIV & Chanis Summary" , c("711B") , TotalList)
+TotalList$ReportType <- ClassifyReport("717 - Service Statistics" , c("717") , TotalList)
+TotalList$ReportType <- ClassifyReport("718 - Inpatient Mortality and Morbidity" , c("718") , TotalList)
+
+TotalList$ReportType[is.na(TotalList$ReportType)] <- "Unknown"
+
+
 
 addmargins(table(TotalList$ReportType , TotalList$Year))
