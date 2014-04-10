@@ -19,6 +19,8 @@ timeStart <- Sys.time()
 plot(x = seq(1,NbreFiles) , y = seq(1,800 , length.out= NbreFiles ) , col = "white")
 
 
+
+
 while ( i < nrow(List105)){
   path <- List105$Path[i]
   district <- List105$District[List105$Path == path]

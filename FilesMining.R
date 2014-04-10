@@ -1,3 +1,10 @@
+#### This proram gets the list of the files in the data we got from Kenya, and 
+#### analyses the names of the different files to get the type of report and an indication of the 
+#### date it has been produced
+
+library(plyr)
+
+
 PathDistrictData <- "J://LIMITED_USE/PROJECT_FOLDERS/KEN/ART_ABCE/HMIS/Districts"
   #"C://Users/grlurton/Documents/Kenya HIS Data 2008-2011/Districts"
   
@@ -6,13 +13,17 @@ PathDistrictData <- "J://LIMITED_USE/PROJECT_FOLDERS/KEN/ART_ABCE/HMIS/Districts
 ##Extracting list files in district data
 
 ListDistricts <- list.files(PathDistrictData)
+ListDirectory <- list.dirs(PathDistrictData)
 
 TotalList <- data.frame(District = character(), Files = character())
 
-for (dist in ListDistricts){
-  ListFilesDist <- data.frame(District = dist, 
-                              Files = list.files(paste(PathDistrictData , dist , sep = "/")))
-  TotalList <- rbind(TotalList , ListFilesDist)
+for (dist in ListDirectory[-1]){
+  District = unlist(strsplit(dist , "/"))[9]
+  Files = list.files(dist)
+  if (length(Files) > 0){
+    ListFilesDist <- data.frame(District = District , Files = Files)
+    TotalList <- rbind(TotalList , ListFilesDist)
+  }
 }
 
 rm(ListFilesDist , dist)
