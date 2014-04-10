@@ -11,15 +11,6 @@ data105 <- data.frame(Indicators = character() , Values = numeric() , Month = ch
 List105 <- subset(TotalList , (ReportType == "105" | ReportType == "Service Delivery") & 
                     !(IdFile %in% exclusion))
 
-###Introduire des numeros de fichiers pour tracer lesquels sont extractibles
-
-i = 1
-NbreFiles <- nrow(List105) - i + 1
-timeStart <- Sys.time()
-plot(x = seq(1,NbreFiles) , y = seq(1,800 , length.out= NbreFiles ) , col = "white")
-
-
-
 
 while ( i < nrow(List105)){
   path <- List105$Path[i]
@@ -34,9 +25,6 @@ while ( i < nrow(List105)){
   dataExtract$IdFile <- rep(IdFile , nrow(dataExtract) ) 
   data105 <- rbind(data105 , dataExtract)
 
-  timeLeft <- (NbreFiles - i)*difftime(Sys.time() , timeStart  , units = "mins") / (i)
-  points(x = i , y = timeLeft , col = "black")
-  
   i <- i + 1
 }
 
