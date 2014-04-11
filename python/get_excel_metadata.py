@@ -26,12 +26,24 @@ def get_districts_with_files(root_path):
 def get_excel_metadata(filename):
     print "opening %s" % (filename,)
     book = xlrd.open_workbook(filename)
-    print book.props
-    return book
+    metadata = (district,)+(book.props["created"] , book.props["creator"] , book.props["modified"] , book.props["last_modified_by"])
+    return metadata
 
-district_files = get_districts_with_files('.')
+district_files = get_districts_with_files(r'C://Users//grlurton//Documents//KenyaHIS//python')
 for district, files in district_files.items():
     if len(files) == 0:
-        continue
+        continue   
     print get_excel_metadata(files[0])
+
+    
+district_files = get_districts_with_files(r'J:\LIMITED_USE\PROJECT_FOLDERS\KEN\ART_ABCE\HMIS\Districts')
+for district, files in district_files.items():
+    if len(files) == 0:
+        continue   
+    print get_excel_metadata(files[0])
+
+"""C:\Users\grlurton\Documents\Kenya HIS Data 2008-2011\Districts\Buret"""
+"""J:\LIMITED_USE\PROJECT_FOLDERS\KEN\ART_ABCE\HMIS\Districts"""
+
+
 
