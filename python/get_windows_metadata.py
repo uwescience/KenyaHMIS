@@ -1,9 +1,9 @@
-import xlrd
 import itertools
 import os
 import sys
 import struct
 import csv
+import OleFileIO_PL
 
 def combine_paths(directory, files):
     return (os.path.join(directory, filename) for filename in files)
@@ -12,7 +12,7 @@ def get_excel_for_district(district_path):
     files = os.walk(district_path)
     files_per_directory = [combine_paths(walk[0],walk[2]) for walk in files]
     all_files = list(itertools.chain(*files_per_directory))
-    return (f for f in all_files if f.endswith('xls'))
+    return (f for f in all_files if f.endswith('xls') or f.endswith('xlsx'))
 
 def get_districts(root_path):
     """Start from the directory containing all the districts. A district is assumed to be any
@@ -22,24 +22,21 @@ def get_districts(root_path):
 def get_districts_with_files(root_path):
     return ((district, get_excel_for_district(district)) for district in get_districts(root_path))
 
-def get_excel_metadata(filename):
-    # print "opening %s" % (filename,)
+def get_OLE_metadata(filename):
     try :
-        book = xlrd.open_workbook(filename , on_demand = True )
+        ole = OleFileIO_PL.OleFileIO(filename)
+        meta = ole.get_metadata()
+        metadata = (filename , meta.author , meta.last_saved_by , meta.create_time , meta.last_saved_time)
     except :
-        return (filename , "error opening file" )
-    try :
-        metadata = (filename, book.user_name)
-    except :
-        metadata = (filename , "file has no user_name")
+        metadata = (filename , "Not working")
     return metadata
 
 def full_function(root_path) :
     for district, files in get_districts_with_files(root_path) :
         for filename in files :
-            yield get_excel_metadata(filename)
+            yield get_OLE_metadata(filename)
 
-with open('ExcelMetadata.csv', 'wb') as output :
+with open('WindowsMetadata.csv', 'wb') as output :
     writer = csv.writer(output , quoting = csv.QUOTE_MINIMAL)
     for results in full_function('J:\LIMITED_USE\PROJECT_FOLDERS\KEN\ART_ABCE\HMIS\Districts') :
         writer.writerow(results)
