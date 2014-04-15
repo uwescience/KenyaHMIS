@@ -3,6 +3,7 @@ import itertools
 import os
 import sys
 import struct
+import csv
 
 def combine_paths(directory, files):
     return (os.path.join(directory, filename) for filename in files)
@@ -33,9 +34,12 @@ def get_excel_metadata(filename):
         metadata = (filename , "file has no props")
     return metadata
 
-    
+def full_function(root_path) :
+    for district, files in get_districts_with_files(root_path) :
+        for filename in files :
+            yield get_excel_metadata(filename)
 
-district_files = get_districts_with_files('J:\LIMITED_USE\PROJECT_FOLDERS\KEN\ART_ABCE\HMIS\Districts')
-for district, files in district_files:
-    for filename in files :
-        print get_excel_metadata(filename)
+with open('ExcelMetadata.csv', 'wb') as output :
+    writer = csv.writer(output , delimiter = ' ' , quotechar = '|' , quoting = csv.QUOTE_MINIMAL)
+    for results in full_function('J:\LIMITED_USE\PROJECT_FOLDERS\KEN\ART_ABCE\HMIS\Districts') :
+        writer.writerow(results)
