@@ -27,11 +27,11 @@ def get_excel_metadata(filename):
     try :
         book = xlrd.open_workbook(filename , on_demand = True )
     except :
-        return (filename , "error opening file" )
+        return ((filename.replace("\\", "/")) , "error opening file" )
     try :
-        metadata = (filename,)+(book.props["created"] , book.props["creator"] , book.props["modified"] , book.props["last_modified_by"])
+        metadata = ((filename.replace("\\", "/")),)+(book.props["created"] , book.props["creator"] , book.props["modified"] , book.props["last_modified_by"])
     except :
-        metadata = (filename , "file has no props")
+        metadata = ((filename.replace("\\", "/")) , "file has no props")
     return metadata
 
 def full_function(root_path) :

@@ -27,11 +27,11 @@ def get_excel_metadata(filename):
     try :
         book = xlrd.open_workbook(filename , on_demand = True )
     except :
-        return (filename , "error opening file" )
+        return ((filename.replace("\\", "/")) , "error opening file" )
     try :
-        metadata = (filename, book.user_name)
+        metadata = ((filename.replace("\\", "/")), book.user_name)
     except :
-        metadata = (filename , "file has no user_name")
+        metadata = ((filename.replace("\\", "/")) , "file has no user_name")
     return metadata
 
 def full_function(root_path) :

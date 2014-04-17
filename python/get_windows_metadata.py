@@ -26,9 +26,9 @@ def get_OLE_metadata(filename):
     try :
         ole = OleFileIO_PL.OleFileIO(filename)
         meta = ole.get_metadata()
-        metadata = (filename , meta.author , meta.last_saved_by , meta.create_time , meta.last_saved_time)
+        metadata = ((filename.replace("\\", "/")) , meta.author , meta.last_saved_by , meta.create_time , meta.last_saved_time)
     except :
-        metadata = (filename , "Not working")
+        metadata = ((filename.replace("\\", "/")) , "Not working")
     return metadata
 
 def full_function(root_path) :
