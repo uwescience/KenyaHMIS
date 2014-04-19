@@ -4,11 +4,7 @@
 
 library(plyr)
 
-
 PathDistrictData <- "J://LIMITED_USE/PROJECT_FOLDERS/KEN/ART_ABCE/HMIS/Districts"
-  #"C://Users/grlurton/Documents/Kenya HIS Data 2008-2011/Districts"
-  
-  #
 
 ##Extracting list files in district data
 
@@ -33,17 +29,6 @@ TotalList$IdFile <- paste("ID" , seq(1:nrow(TotalList)) , sep = "")
 
 TotalList$Path <- paste(PathDistrictData , TotalList$District , TotalList$Files , sep = "/")
 
-
-##Finding years from the files names
-
-substr74 <- substr(TotalList$Files , nchar(TotalList$Files) - 7 , nchar(TotalList$Files)-4 )
-TotalList$Year[substr74 %in% c("2008" , "2009" , "2010" , "2011")] <- substr74[substr74 %in% c("2008" , "2009" , "2010" , "2011")] 
-
-substr85 <- substr(TotalList$Files , nchar(TotalList$Files) - 8 , nchar(TotalList$Files)-5 )
-TotalList$Year[substr85 %in% c("2008" , "2009" , "2010" , "2011")] <- substr85[substr85 %in% c("2008" , "2009" , "2010" , "2011")] 
-
-TotalList$Year[is.na(TotalList$Year)] <- "No Date (yet)"
-
 ####Extracting Type of report from files names
 
 ClassifyReport <- function(ReportType , patterns , data){
@@ -55,36 +40,7 @@ ClassifyReport <- function(ReportType , patterns , data){
   data$ReportType
 }
 
-rm(ONEpattern)
-
-
-TotalList$ReportType <- ClassifyReport("Analysis" , c("Analysis.xls") , TotalList)
-TotalList$ReportType <- ClassifyReport("Hospital Administrative Statistics" , c("Hospital Adm" ,
-                                                                                "ADMIN STATISTICS" ,
-                                                                                "ADMINISTRATIVE STATISTICS") ,
-                                       TotalList)
-TotalList$ReportType <- ClassifyReport("Immunisation" , "IMMUNISATION" , TotalList)
-TotalList$ReportType <- ClassifyReport("Inpatient Mortality and Morbidity" ,
-                                       c("Morbidity and Mortality inpatient" ,
-                                         "INPATIENT MORBIDITY AND MORTALITY" ,
-                                         "IN-PATIENT MORBIDITY AND MORTALITY" ,
-                                         "IN PATIENT MORBIDITY AND MORTALITY",
-                                         "In-patient%20Morbidity%26Mortality" ,
-                                         "In-patient Morbidity&M" ,
-                                         "INPATIENT MORBIDITY & MORTALITY" ,
-                                         "INPATIENT MORBIDITY&M" ,
-                                         "INPATIENT MORBIDITY MORTALITY" ,
-                                         "INPT MORB&MORT" ,
-                                         "IN PATIENT MORB&MORT" ,
-                                         "INPT MORB &MORT" ,
-                                         "IP MORB &MORT"),
-                                       TotalList)
-TotalList$ReportType <- ClassifyReport("Inpatient Administrative Statistics" ,
-                                       c("Inpatient Adm" , "In patient Adm") , TotalList)
-TotalList$ReportType <- ClassifyReport("Service Delivery Summary" , c("service delivery" ,
-                                                              "Service Delvery" ,
-                                                              "SERVICE DELIVERLY") , TotalList)
-TotalList$ReportType <- ClassifyReport("Workload" , "WORKLOAD" , TotalList)
+###Getting type of report from file nanmes
 
 TotalList$ReportType <- ClassifyReport("105 - Service Delivery Summary" , c("105") , TotalList)
 TotalList$ReportType <- ClassifyReport("705A - Outpatient Summary <5" , c("705A" , "705 A") , TotalList)
@@ -94,8 +50,52 @@ TotalList$ReportType <- ClassifyReport("711B - RH, TB, Malaria, HIV & Chanis Sum
 TotalList$ReportType <- ClassifyReport("717 - Service Statistics" , c("717") , TotalList)
 TotalList$ReportType <- ClassifyReport("718 - Inpatient Mortality and Morbidity" , c("718") , TotalList)
 
-TotalList$ReportType[is.na(TotalList$ReportType)] <- "Unknown"
+addmargins(table(TotalList$ReportType))
+
+write.csv(TotalList , "TotalList.csv")
+
+##Comparison with metadata
+
+windowsMeta <- read.csv("C:/Users/grlurton/Documents/KenyaHIS/python/WindowsMetadata.csv" , header = FALSE)
+colnames(windowsMeta) <-  c("Path" , "Author" , "Modifier" , "DateCreated" , "DateSaved")
+windowsMeta$Path <- gsub( pattern = ":/" , replacement = "://" , x = windowsMeta$Path)
+
+TotalList <- merge(TotalList , windowsMeta , all = T)
+
+table(TotalList$Author,TotalList$ReportType)
+
+table(TotalList$ReportType[TotalList$Author == "Not working"])/ table(TotalList$ReportType)
+##We have a significantly higher number of non working files for 718... May be worth a look
+
+###Names are considered authors of a report type if they are authors of more than 25% of these reports
+
+IdentifyAuthor <- function(ReportData){
+  NReports <- nrow(ReportData)
+  ReportData$Author <- as.character(ReportData$Author)
+  ReportData$DateCreated <- as.character(ReportData$DateCreated)
+  DistAuthors <- data.frame(table(ReportData$Author , ReportData$DateCreated) / NReports > 0.08)
+  colnames(DistAuthors) <- sort(unique(as.character(ReportData$DateCreated)))
+  CoordAuthor <- which(DistAuthors == TRUE , arr.ind = TRUE)
+  Author <- rownames(DistAuthors)[CoordAuthor[,1]]
+  DateCreation <- colnames(DistAuthors)[CoordAuthor[,2]]
+  #DateCreation <- substr(DateCreation , )
+  data.frame(Author  , DateCreation)
+}
+
+ListForExtract <- TotalList[!is.na(TotalList$ReportType) & !is.na(TotalList$Author) , ]
+
+MetadataTrace <- ddply(ListForExtract  , .(ReportType) , IdentifyAuthor)
 
 
 
-addmargins(table(TotalList$ReportType , TotalList$Year))
+
+
+##Finding years from the files names
+
+substr74 <- substr(TotalList$Files , nchar(TotalList$Files) - 7 , nchar(TotalList$Files)-4 )
+TotalList$Year[substr74 %in% c("2008" , "2009" , "2010" , "2011")] <- substr74[substr74 %in% c("2008" , "2009" , "2010" , "2011")] 
+
+substr85 <- substr(TotalList$Files , nchar(TotalList$Files) - 8 , nchar(TotalList$Files)-5 )
+TotalList$Year[substr85 %in% c("2008" , "2009" , "2010" , "2011")] <- substr85[substr85 %in% c("2008" , "2009" , "2010" , "2011")] 
+
+TotalList$Year[is.na(TotalList$Year)] <- "No Date (yet)"
