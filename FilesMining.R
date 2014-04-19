@@ -86,3 +86,5 @@ ListForExtract <- TotalList[!is.na(TotalList$ReportType) & !is.na(TotalList$Auth
 MetadataTrace <- ddply(ListForExtract  , .(ReportType) , IdentifyAuthor)
 
 MetadataTrace
+
+write.csv(MetadataTrace , "MetadataTrace.csv")
