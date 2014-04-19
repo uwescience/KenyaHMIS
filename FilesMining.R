@@ -67,18 +67,17 @@ table(TotalList$Author,TotalList$ReportType)
 table(TotalList$ReportType[TotalList$Author == "Not working"])/ table(TotalList$ReportType)
 ##We have a significantly higher number of non working files for 718... May be worth a look
 
-###Names are considered authors of a report type if they are authors of more than 25% of these reports
+###Names are considered authors of a report type if they are authors of more than 10% of these reports
 
 IdentifyAuthor <- function(ReportData){
   NReports <- nrow(ReportData)
   ReportData$Author <- as.character(ReportData$Author)
   ReportData$DateCreated <- as.character(ReportData$DateCreated)
-  DistAuthors <- data.frame(table(ReportData$Author , ReportData$DateCreated) / NReports > 0.08)
+  DistAuthors <- data.frame(table(ReportData$Author , ReportData$DateCreated) / NReports > 0.1)
   colnames(DistAuthors) <- sort(unique(as.character(ReportData$DateCreated)))
   CoordAuthor <- which(DistAuthors == TRUE , arr.ind = TRUE)
   Author <- rownames(DistAuthors)[CoordAuthor[,1]]
   DateCreation <- colnames(DistAuthors)[CoordAuthor[,2]]
-  #DateCreation <- substr(DateCreation , )
   data.frame(Author  , DateCreation)
 }
 
@@ -86,16 +85,4 @@ ListForExtract <- TotalList[!is.na(TotalList$ReportType) & !is.na(TotalList$Auth
 
 MetadataTrace <- ddply(ListForExtract  , .(ReportType) , IdentifyAuthor)
 
-
-
-
-
-##Finding years from the files names
-
-substr74 <- substr(TotalList$Files , nchar(TotalList$Files) - 7 , nchar(TotalList$Files)-4 )
-TotalList$Year[substr74 %in% c("2008" , "2009" , "2010" , "2011")] <- substr74[substr74 %in% c("2008" , "2009" , "2010" , "2011")] 
-
-substr85 <- substr(TotalList$Files , nchar(TotalList$Files) - 8 , nchar(TotalList$Files)-5 )
-TotalList$Year[substr85 %in% c("2008" , "2009" , "2010" , "2011")] <- substr85[substr85 %in% c("2008" , "2009" , "2010" , "2011")] 
-
-TotalList$Year[is.na(TotalList$Year)] <- "No Date (yet)"
+MetadataTrace
