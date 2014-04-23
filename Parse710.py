@@ -1,10 +1,5 @@
 import csv
-import time
-import datetime
 import xlrd
-
-
-##Get all the 710 susceptible files from screening
 
 def Get_710_files(FilesScreen , ReportName):
     FilesScreened = csv.DictReader(open(FilesScreen))
@@ -12,48 +7,7 @@ def Get_710_files(FilesScreen , ReportName):
     for row in FilesScreened :
         if row['Status'] not in ['Nothing Ok' , 'Date and Name not Ok'] and row['ReportType'] == ReportName :
             paths.append(row['Path'])
-    return (paths)
-
-#print Get_710_files('C:\Users\grlurton\Documents\KenyaHMIS\ReportScreen.csv' , '710 - Immunization Summary')
-
-
-##Test which have sheets with name compatible with actually being 710
-
-list710 = Get_710_files('C:\Users\grlurton\Documents\KenyaHMIS\ReportScreen.csv' , '710 - Immunization Summary')
-
-def getchecks(filename) :
-    booknames = {}
-    for filename in list710 :
-        try :
-            book = xlrd.open_workbook(filename)
-            for sheet in book.sheet_names():
-                booknames.update({'ExcelFile':filename , 'ExcelSheet':sheet})
-            if 'MOH 710 Section A' in book.sheet_names():
-                booknames.update({'RowsSectionA':nrows(book.sheet_by_name('MOH 710 Section A'))})
-            if 'MOH 710 Section B' in book.sheet_names():
-                booknames.update({'RowsSectionB':nrows(book.sheet_by_name('MOH 710 Section B'))})
-        except :
-            booknames.update({'ExcelFile':"not working"})
-
-
-
-
-    ## Test sheet names and number of sheets
-
-    ## For each sheet test number of rows and structure of the sheet
-
-    ## For each sheet get test specific values in specific cells
-
-
-
-    
-##Import
-    ## Get the list of merged values
-    ## Get the list of error cells
-    ##first column, reproducing merged values in merged cells
-    ##Second column
-        ## reproduce these columns 12 times
-    ##columns 3 to 14 and stack them next to previous 
+    return paths
 
 def lookup(section , i , j , merge):
     merge_cell = [(c[0] , c[2]) for c in merge
@@ -63,18 +17,46 @@ def lookup(section , i , j , merge):
         return section.cell_value(i , j)
     return section.cell_value(*merge_cell[0])
 
+def import710(FilePath, writer):
+    book = xlrd.open_workbook(FilePath , formatting_info  = True )
+    assert book.sheet_names() == ['MOH 710 Section A', 'MOH 710 Section B']
+    sectionA = book.sheet_by_name('MOH 710 Section A')
+    A_START_ROW = 7
+    assert sectionA.cell_value(A_START_ROW,0) == 'SECTION A'
+    for row in xrange(A_START_ROW+1, sectionA.nrows):
+        for col in xrange(2, 2+12):
+            indic1 = lookup(sectionA, row, 0, sectionA.merged_cells)
+            indic2 = lookup(sectionA, row, 1, sectionA.merged_cells)
+            month = lookup(sectionA, A_START_ROW, col, sectionA.merged_cells)
+            if sectionA.cell_type(row, col) != xlrd.XL_CELL_NUMBER:
+                continue
+            value = lookup(sectionA, row, col, sectionA.merged_cells)
+            t = [FilePath, 'A', indic1, indic2, month, value]
+            writer.writerow(t)
+ 
+    sectionB = book.sheet_by_name('MOH 710 Section B')
+    assert sectionB.cell_value(1,0) == 'BCG'
+    B_START_ROW = 0
+    for row in xrange(B_START_ROW+1, sectionB.nrows):
+        for col in xrange(2, 2+12):
+            indic1 = lookup(sectionB, row, 0, sectionB.merged_cells)
+            indic2 = lookup(sectionB, row, 1, sectionB.merged_cells)
+            month = lookup(sectionB, B_START_ROW, col, sectionB.merged_cells)
+            if sectionB.cell_type(row, col) != xlrd.XL_CELL_NUMBER:
+                continue
+            value = lookup(sectionB, row, col, sectionB.merged_cells)
+            t = [FilePath, 'B', indic1, indic2, month, value]
+            writer.writerow(t)
 
-
-
-#sectionA = book.sheet_by_name('MOH 710 Section A')
-#sectionB = book.sheet_by_name('MOH 710 Section B')
-
-#print sectionA.cell_type(40,12)
-#       for colx in xrange(clo, chi):
-
-
-#cell = sectionA.cell(0,0)
-#print cell.dump
-#print sectionA.row(0)
-#print sectionA.col(0)
-#print sectionA.nrows
+with open('710Data.csv', 'wb') as output:
+    writer = csv.writer(output)
+    cntok = 0
+    cntnonok = 0
+    for filename in sorted(Get_710_files('C:\Users\grlurton\Documents\KenyaHMIS\ReportScreen.csv' , '710 - Immunization Summary')):
+        try:
+            import710(filename, writer)
+            cntok += 1
+        except Exception as e:
+            print "skipping {} because {}".format(filename, e)
+            cntnonok += 1
+        print '710 ok' , cntok , '710 non ok' , cntnonok
