@@ -5,7 +5,7 @@ def Get_705A_files(FilesScreen , ReportName):
     FilesScreened = csv.DictReader(open(FilesScreen))
     paths = []
     for row in FilesScreened :
-        if row['Status'] not in ['Nothing Ok' , 'Date and Name not Ok'] and row['ReportType'] == ReportName :
+        if row['Status'] not in ['Nothing Ok' , 'Date and Name not Ok'] and row['ReportType'] == ReportName and row['ReportTested'] != '705B - Outpatient Summary >5':
             paths.append(row['Path'])
     return paths
 
