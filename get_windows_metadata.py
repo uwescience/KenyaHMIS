@@ -4,9 +4,23 @@ import sys
 import struct
 import csv
 import OleFileIO_PL
+import re
 
 def combine_paths(directory, files):
     return (os.path.join(directory, filename) for filename in files)
+
+def Get_Year_of_report(FilePath):
+    if FilePath.find('2008') != -1 or FilePath.find(' 08 ') != -1:
+        Year = '2008'
+    elif FilePath.find('2009')  != -1 or FilePath.find(' 09 ')  != -1:
+        Year = '2009'
+    elif FilePath.find('2010')  != -1 or FilePath.find(' 10 ')  != -1:
+        Year = '2010'
+    elif FilePath.find('2011')  != -1 or FilePath.find(' 11 ')  != -1:
+        Year = '2011'
+    else :
+        Year = 'No year'
+    return (Year ,)
 
 def get_excel_for_district(district_path):
     files = os.walk(district_path)
@@ -18,6 +32,10 @@ def get_districts(root_path):
     """Start from the directory containing all the districts. A district is assumed to be any
     directory in root_path."""
     return (os.path.join(root_path,directory) for directory in os.listdir(root_path) if os.path.isdir(os.path.join(root_path,directory)))
+
+def get_district_name(filename):
+    DistrictName = re.split('/', filename.replace("\\", "/"))[7]
+    return (DistrictName ,)
 
 def get_districts_with_files(root_path):
     return ((district, get_excel_for_district(district)) for district in get_districts(root_path))
@@ -54,7 +72,7 @@ def identify_report_type(filename):
 def full_function(root_path) :
     for district, files in get_districts_with_files(root_path) :
         for filename in files :
-            result = get_OLE_metadata(filename) + identify_report_type(filename)
+            result = get_OLE_metadata(filename) + identify_report_type(filename) + Get_Year_of_report(filename) + get_district_name(filename)
             print result
             yield result
 
