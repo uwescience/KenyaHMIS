@@ -9,6 +9,19 @@ def Get_705A_files(FilesScreen , ReportName):
             paths.append(row['Path'])
     return paths
 
+def Get_Year_of_report(FilePath):
+    if FilePath.find('2008') != -1 or FilePath.find(' 08 ') != -1:
+        Year = '2008'
+    elif FilePath.find('2009')  != -1 or FilePath.find(' 09 ')  != -1:
+        Year = '2009'
+    elif FilePath.find('2010')  != -1 or FilePath.find(' 10 ')  != -1:
+        Year = '2010'
+    elif FilePath.find('2011')  != -1 or FilePath.find(' 11 ')  != -1:
+        Year = '2011'
+    else :
+        Year = 'No year'
+    return Year
+
 def lookup(section , i , j , merge):
     merge_cell = [(c[0] , c[2]) for c in merge
                   if i >= c[0] and i < c[1] and j >= c[2] and j < c[3] ]
@@ -20,6 +33,7 @@ def lookup(section , i , j , merge):
 def import705A(FilePath, writer):
     book = xlrd.open_workbook(FilePath , formatting_info  = True )
     assert book.sheet_names() == ['MOH 705A']
+    year = Get_Year_of_report(FilePath)
     sheet = book.sheet_by_name('MOH 705A')
     START_ROW = 6
     assert sheet.cell_value(START_ROW,0) == 'DISEASES'
@@ -30,7 +44,7 @@ def import705A(FilePath, writer):
             if sheet.cell_type(row, col) != xlrd.XL_CELL_NUMBER:
                 continue
             value = lookup(sheet, row, col, sheet.merged_cells)
-            t = [FilePath, indic, month, value]
+            t = [FilePath, indic, month, value , year]
             writer.writerow(t)
 
 with open('705AData.csv', 'wb') as output:

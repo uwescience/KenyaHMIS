@@ -9,6 +9,19 @@ def Get_710_files(FilesScreen , ReportName):
             paths.append(row['Path'])
     return paths
 
+def Get_Year_of_report(FilePath):
+    if FilePath.find('2008') != -1 or FilePath.find(' 08 ') != -1:
+        Year = '2008'
+    elif FilePath.find('2009')  != -1 or FilePath.find(' 09 ')  != -1:
+        Year = '2009'
+    elif FilePath.find('2010')  != -1 or FilePath.find(' 10 ')  != -1:
+        Year = '2010'
+    elif FilePath.find('2011')  != -1 or FilePath.find(' 11 ')  != -1:
+        Year = '2011'
+    else :
+        Year = 'No year'
+    return Year
+
 def lookup(section , i , j , merge):
     merge_cell = [(c[0] , c[2]) for c in merge
                   if i >= c[0] and i < c[1] and j >= c[2] and j < c[3] ]
@@ -20,6 +33,7 @@ def lookup(section , i , j , merge):
 def import710(FilePath, writer):
     book = xlrd.open_workbook(FilePath , formatting_info  = True )
     assert book.sheet_names() == ['MOH 710 Section A', 'MOH 710 Section B']
+    year = Get_Year_of_report(FilePath)
     sectionA = book.sheet_by_name('MOH 710 Section A')
     A_START_ROW = 7
     assert sectionA.cell_value(A_START_ROW,0) == 'SECTION A'
@@ -31,7 +45,7 @@ def import710(FilePath, writer):
             if sectionA.cell_type(row, col) != xlrd.XL_CELL_NUMBER:
                 continue
             value = lookup(sectionA, row, col, sectionA.merged_cells)
-            t = [FilePath, 'A', indic1, indic2, month, value]
+            t = [FilePath, 'A', indic1, indic2, month, value , year]
             writer.writerow(t)
  
     sectionB = book.sheet_by_name('MOH 710 Section B')
@@ -45,7 +59,7 @@ def import710(FilePath, writer):
             if sectionB.cell_type(row, col) != xlrd.XL_CELL_NUMBER:
                 continue
             value = lookup(sectionB, row, col, sectionB.merged_cells)
-            t = [FilePath, 'B', indic1, indic2, month, value]
+            t = [FilePath, 'B', indic1, indic2, month, value , year]
             writer.writerow(t)
 
 with open('710Data.csv', 'wb') as output:
