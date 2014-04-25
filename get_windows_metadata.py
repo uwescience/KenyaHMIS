@@ -78,6 +78,6 @@ def full_function(root_path) :
 
 with open('WindowsMetadata.csv', 'wb') as output :
     writer = csv.writer(output , quoting = csv.QUOTE_MINIMAL)
-    writer.writerow(['Path' , 'Author' , 'Modifier' , 'DateCreated' , 'DateModifier' , 'ReportType'])
+    writer.writerow(['Path' , 'Author' , 'Modifier' , 'DateCreated' , 'DateModifier' , 'ReportType' , 'Year' , 'District'])
     for results in full_function('J:\LIMITED_USE\PROJECT_FOLDERS\KEN\ART_ABCE\HMIS\Districts') :
         writer.writerow(results)

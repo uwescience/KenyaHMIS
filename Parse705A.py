@@ -27,10 +27,13 @@ def import705A(FilePath, writer):
         for col in xrange(2, 2+12):
             indic = lookup(sheet, row, 1, sheet.merged_cells)
             month = lookup(sheet, START_ROW, col, sheet.merged_cells)
-            if sheet.cell_type(row, col) != xlrd.XL_CELL_NUMBER:
-                continue
             value = lookup(sheet, row, col, sheet.merged_cells)
-            t = [FilePath, indic, month, value ]
+            if (sheet.cell_type(row, col) == xlrd.XL_CELL_NUMBER or
+                    sheet.cell_type(row, col) == xlrd.XL_CELL_BLANK or
+                    (sheet.cell_type(row,col) == xlrd.XL_CELL_TEXT and len(value.strip()) == 0)):
+                t = [FilePath, indic, month, value ]
+            else :
+                continue            
             writer.writerow(t)
 
 with open('705AData.csv', 'wb') as output:

@@ -29,10 +29,13 @@ def import710(FilePath, writer):
             indic1 = lookup(sectionA, row, 0, sectionA.merged_cells)
             indic2 = lookup(sectionA, row, 1, sectionA.merged_cells)
             month = lookup(sectionA, A_START_ROW, col, sectionA.merged_cells)
-            if sectionA.cell_type(row, col) != xlrd.XL_CELL_NUMBER:
-                continue
             value = lookup(sectionA, row, col, sectionA.merged_cells)
-            t = [FilePath, 'A', indic1, indic2, month, value]
+            if (sectionA.cell_type(row, col) == xlrd.XL_CELL_NUMBER or
+                    sectionA.cell_type(row, col) == xlrd.XL_CELL_BLANK or
+                    (sectionA.cell_type(row,col) == xlrd.XL_CELL_TEXT and len(value.strip()) == 0)):
+                t = [FilePath, 'A', indic1, indic2, month, value]
+            else :
+                continue
             writer.writerow(t)
  
     sectionB = book.sheet_by_name('MOH 710 Section B')
@@ -43,10 +46,13 @@ def import710(FilePath, writer):
             indic1 = lookup(sectionB, row, 0, sectionB.merged_cells)
             indic2 = lookup(sectionB, row, 1, sectionB.merged_cells)
             month = lookup(sectionB, B_START_ROW, col, sectionB.merged_cells)
-            if sectionB.cell_type(row, col) != xlrd.XL_CELL_NUMBER:
-                continue
             value = lookup(sectionB, row, col, sectionB.merged_cells)
-            t = [FilePath, 'B', indic1, indic2, month, value]
+            if (sectionB.cell_type(row, col) == xlrd.XL_CELL_NUMBER or
+                    sectionB.cell_type(row, col) == xlrd.XL_CELL_BLANK or
+                    (sectionB.cell_type(row,col) == xlrd.XL_CELL_TEXT and len(value.strip()) == 0)):
+                t = [FilePath, 'B', indic1, indic2, month, value]
+            else :
+                continue
             writer.writerow(t)
 
 with open('710Data.csv', 'wb') as output:
