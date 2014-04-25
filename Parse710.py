@@ -31,9 +31,10 @@ def import710(FilePath, writer):
             month = lookup(sectionA, A_START_ROW, col, sectionA.merged_cells)
             value = lookup(sectionA, row, col, sectionA.merged_cells)
             if (sectionA.cell_type(row, col) == xlrd.XL_CELL_NUMBER or
-                    sectionA.cell_type(row, col) == xlrd.XL_CELL_BLANK or
-                    (sectionA.cell_type(row,col) == xlrd.XL_CELL_TEXT and len(value.strip()) == 0)):
-                t = [FilePath, 'A', indic1, indic2, month, value]
+                    sectionA.cell_type(row, col) == xlrd.XL_CELL_BLANK):
+                t = [FilePath, 'A' , indic1, indic2 ,  month, value ]
+            elif sectionA.cell_type(row,col) == xlrd.XL_CELL_TEXT and len(value.strip()) == 0:
+                t = [FilePath, 'A' , indic1, indic2 ,  month, value.strip() ]
             else :
                 continue
             writer.writerow(t)
@@ -48,15 +49,16 @@ def import710(FilePath, writer):
             month = lookup(sectionB, B_START_ROW, col, sectionB.merged_cells)
             value = lookup(sectionB, row, col, sectionB.merged_cells)
             if (sectionB.cell_type(row, col) == xlrd.XL_CELL_NUMBER or
-                    sectionB.cell_type(row, col) == xlrd.XL_CELL_BLANK or
-                    (sectionB.cell_type(row,col) == xlrd.XL_CELL_TEXT and len(value.strip()) == 0)):
-                t = [FilePath, 'B', indic1, indic2, month, value]
+                    sectionB.cell_type(row, col) == xlrd.XL_CELL_BLANK):
+                t = [FilePath, 'B' , indic1 , indic2, month, value ]
+            elif sectionB.cell_type(row,col) == xlrd.XL_CELL_TEXT and len(value.strip()) == 0:
+                t = [FilePath, 'B' , indic1 , indic2, month, value.strip() ]
             else :
                 continue
             writer.writerow(t)
 
 with open('710Data.csv', 'wb') as output:
-    writer = csv.writer(output)
+    writer = csv.writer(output , delimiter = '\t')
     cntok = 0
     cntnonok = 0
     for filename in sorted(Get_710_files('C:\Users\grlurton\Documents\KenyaHMIS\ReportScreen.csv' , '710 - Immunization Summary')):

@@ -29,15 +29,16 @@ def import705A(FilePath, writer):
             month = lookup(sheet, START_ROW, col, sheet.merged_cells)
             value = lookup(sheet, row, col, sheet.merged_cells)
             if (sheet.cell_type(row, col) == xlrd.XL_CELL_NUMBER or
-                    sheet.cell_type(row, col) == xlrd.XL_CELL_BLANK or
-                    (sheet.cell_type(row,col) == xlrd.XL_CELL_TEXT and len(value.strip()) == 0)):
+                    sheet.cell_type(row, col) == xlrd.XL_CELL_BLANK):
                 t = [FilePath, indic, month, value ]
+            elif sheet.cell_type(row,col) == xlrd.XL_CELL_TEXT and len(value.strip()) == 0:
+                t = [FilePath, indic, month, value.strip() ]
             else :
                 continue            
             writer.writerow(t)
 
 with open('705AData.csv', 'wb') as output:
-    writer = csv.writer(output)
+    writer = csv.writer(output , delimiter = "\t")
     cntok = 0
     cntnonok = 0
     for filename in sorted(Get_705A_files('C:\Users\grlurton\Documents\KenyaHMIS\ReportScreen.csv' , '705A - Outpatient Summary <5')):
