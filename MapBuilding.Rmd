@@ -76,7 +76,7 @@ The descending levels are
 
 ``````{r , fig.width=14, fig.height=12}
 Counties <- readShapePoly('Shapefiles/Counties/counties.shp')
-Constituencies <- readShapePoly('Shapefiles/Constituency/constituencies.shp')
+Constituencies <- readShapePoly('Shapefiles/Constituencies/constituencies.shp')
 Wards <- readShapePoly('Shapefiles/Wards/ward.results.formatted.shp')
 
 par(mfrow = c(2,2))
@@ -288,7 +288,8 @@ Constituencies <- merge(Constituencies , MappedDistricts , all.x = TRUE ,
 
 par(mfrow = c(2,3))
 plot(Districts , border = 'white')
-legend('left' , legend = Levels , fill = c(1:12) , box.col='white')
+legend('left' , legend = Levels , fill = c(1:12) , box.col='white' , 
+       cex = 1.3 , y.intersp = 0.8)
 plot(Districts , col = factor(Districts$Unit , levels= Levels , ))
 title(main = 'Districts')
 plot(Divisions , col = factor(Divisions$Unit, levels= Levels))
@@ -299,10 +300,113 @@ title(main = 'Counties')
 plot(Constituencies , col = factor(Constituencies$Unit , levels= Levels))
 title(main = 'Constituencies')
 ```
-### Criteria to identify a district in step 1
+### Criteria to identify a district
 
 1. The district has an identified name in any of the shapefiles
 2. The name is unequivocal (ie it can't be attributed to another level or hierarchy)
 3. No subdivision of the district is present in the data
 
-We first want to see where are the different units that have been identified
+Here we have a problem because some units are included in some others.
+
+After discussion with Peter Cherutich, it appears that some of the files may actually be District Hospitals. This would be a good explanations of the patterns we see.
+
+```{r , prompt=FALSE}
+rm(dupl , i , lNameSplit , lcrop , n  , name , names , permut , Data705A , NameSplit)
+```
+
+
+### Matching of Facilities
+
+## A bit of cleaning of facilities data
+
+```{r, fig.width=14, fig.height=12 }
+facilities <- read.csv('Facilities/KenyaFacilitiesGPS.csv')
+facilities <- subset(facilities , Geolocation != '')
+facilities$Geolocation <- as.character(facilities$Geolocation)
+facilities$Geolocation <- substr(facilities$Geolocation , 2 , nchar(facilities$Geolocation) - 1)
+Longitude <- unlist(strsplit(facilities$Geolocation , ","))[seq(1,
+                                                                length(unlist(strsplit(facilities$Geolocation , ",")))-1 , 2)]
+Latitude <- unlist(strsplit(facilities$Geolocation , ","))[seq(2,                                                        length(unlist(strsplit(facilities$Geolocation ,","))) , 2)]
+
+DistHosp <- grep(pattern = ' DISTRICT HOSPITAL' , facilities$F_NAME)
+SubDistHosp <- grep(pattern = 'SUB-DISTRICT HOSP' , facilities$F_NAME)
+MedCentre <- grep(pattern = 'MEDICAL SERVICES|MEDICARE|MEDICAL CENTRE|HEALTH SERVICE|MED CENTRE', 
+                  facilities$F_NAME)
+NursingHome <- grep(pattern = 'NURSING |M N H|MNH|M&N| MAT' , facilities$F_NAME)
+HealthCentre <- grep(pattern = 'HEALTH CENTRE| H C|HC|HEALTH CARE CENTRE', facilities$F_NAME)
+Dispensary <- grep(pattern = 'DISP' , facilities$F_NAME)
+MissionHC <- grep(pattern = 'MISS H|MISSION HC' , facilities$F_NAME)
+MissionHosp <- grep(pattern = 'MISSION HOSPITAL|MISS. HOSPITAL|CATHOLIC HOSPITAL' , facilities$F_NAME)
+Hosp <- grep(pattern = 'HOSP' , facilities$F_NAME)
+Clinic <- grep(pattern = 'CLINIC' , facilities$F_NAME)
+
+facilities$Level <- ''
+facilities$Level[Hosp] <- 'Hospital'
+facilities$Level[HealthCentre] <- 'Health Center'
+facilities$Level[MedCentre] <- 'Medical Center'
+facilities$Level[Clinic] <- 'Clinic'
+facilities$Level[Dispensary] <- 'Dispensary'
+facilities$Level[NursingHome] <- 'Nursing Home'
+facilities$Level[MissionHC] <- 'Mission Health Center'
+facilities$Level[DistHosp] <- 'District Hospital'
+facilities$Level[MissionHosp] <- 'Mission Hospital'
+facilities$Level[SubDistHosp] <- 'Sub District Hospital'
+
+table(facilities$Level)
+
+par(mfrow = c(2,4))
+plot(Districts)
+points(x = Latitude[facilities$Level %in% c('District Hospital' , 'Sub District Hospital')] , 
+       y = Longitude[facilities$Level %in% c('District Hospital' , 'Sub District Hospital')] , 
+       pch = 21 , 
+       bg = factor(facilities$Level[facilities$Level %in% c('District Hospital' , 
+                                                            'Sub District Hospital')] )
+       )
+plot(Districts)
+points(x = Latitude[facilities$Level %in% c('Health Center' , 'Medical Center')] , 
+       y = Longitude[facilities$Level %in% c('Health Center', 'Medical Center')] , 
+       pch = 21 , 
+       bg = factor(facilities$Level[facilities$Level %in% c('Health Center' , 'Medical Center')])
+       )
+```
+
+## Matching health center names with data
+
+```{r , fig.width=14, fig.height=12 }
+for(i in 1:nrow(DataNames)){
+  name <- DataNames$NameUnif[i]
+  test <- grep(name , tolower(facilities$F_NAME))
+  if(length(test) == 1){
+    DataNames$Facility[i] <- facilities$Level[test]
+    DataNames$FacilLong[i] <- Longitude[test]
+    DataNames$FacilLat[i] <- Latitude[test]
+  }
+    if(length(test) > 1){
+    DataNames$Facility[i] <- 'Multiple Levels'
+    DataNames$FacilLong[i] <- Longitude[test[1]]
+    DataNames$FacilLat[i] <- Latitude[test[1]]
+  }
+}
+
+par(mfrow = c(2,3))
+plot(Districts , border = 'white')
+legend('left' , legend = Levels , fill = c(1:12) , box.col='white' , 
+       cex = 1.3 , y.intersp = 0.8)
+plot(Districts , col = factor(Districts$Unit , levels= Levels , ))
+title(main = 'Districts')
+plot(Divisions , col = factor(Divisions$Unit, levels= Levels) )
+points(x = DataNames$FacilLat , y = DataNames$FacilLong , pch = 21 , 
+       bg = factor(DataNames$Facility) , 
+       cex = 1.5)
+title(main = 'Divisions')
+plot(Districts , border = 'white')
+legend('left' , legend = factor(sort(unique(DataNames$Facility))) , fill = c(1:9), box.col='white' , 
+       cex = 1.3 , y.intersp = 0.8 )
+plot(Counties , col = factor(Counties$Unit , levels= Levels ))
+title(main = 'Counties')
+plot(Constituencies , col = factor(Constituencies$Unit , levels= Levels))
+title(main = 'Constituencies')
+points(x = DataNames$FacilLat , y = DataNames$FacilLong , pch = 21 , 
+       bg = factor(DataNames$Facility), cex = 1.5)
+```
+
