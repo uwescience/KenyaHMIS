@@ -38,5 +38,6 @@ def full_function(root_path) :
 
 with open('J:\\Project\\abce\\ken\\HMIS\\data\\WindowsMetadata.csv', 'wb') as output :
     writer = csv.writer(output , quoting = csv.QUOTE_MINIMAL)
+    writer.writerow(['Path' , 'Author' , 'Saver' , 'DateCreated' , 'DateSaved'])
     for results in full_function('J:\LIMITED_USE\PROJECT_FOLDERS\KEN\ART_ABCE\HMIS\Districts') :
         writer.writerow(results)

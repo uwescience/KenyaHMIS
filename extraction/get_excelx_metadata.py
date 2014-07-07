@@ -23,13 +23,12 @@ def get_districts_with_files(root_path):
     return ((district, get_excel_for_district(district)) for district in get_districts(root_path))
 
 def get_excel_metadata(filename):
-    # print "opening %s" % (filename,)
     try :
         book = xlrd.open_workbook(filename , on_demand = True )
     except :
         return ((filename.replace("\\", "/")) , "error opening file" )
     try :
-        metadata = ((filename.replace("\\", "/")),)+(book.props["created"] , book.props["creator"] , book.props["modified"] , book.props["last_modified_by"])
+        metadata = ((filename.replace("\\", "/")),)+(book.props["creator"]  , book.props["last_modified_by"] , book.props["created"] ,  book.props["modified"])
     except :
         metadata = ((filename.replace("\\", "/")) , "file has no props")
     return metadata
@@ -41,5 +40,6 @@ def full_function(root_path) :
 
 with open('J:\\Project\\abce\\ken\\HMIS\\data\\ExcelxMetadata.csv', 'wb') as output :
     writer = csv.writer(output , quoting = csv.QUOTE_MINIMAL)
+    writer.writerow(['Path' , 'Author' , 'Saver' , 'DateCreated' , 'DateSaved'])
     for results in full_function('J:\LIMITED_USE\PROJECT_FOLDERS\KEN\ART_ABCE\HMIS\Districts') :
         writer.writerow(results)

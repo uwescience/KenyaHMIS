@@ -19,8 +19,8 @@ ClassifyReport <- function(ReportType , patterns , data){
 }
 
 ###Getting type of report from file names
-windowsMeta <- read.csv("WindowsMetadata.csv" , header = FALSE)
-colnames(windowsMeta) <-  c("Path" , "Author" , "Modifier" , "DateCreated" , "DateSaved")
+windowsMeta <- read.csv("WindowsMetadata.csv" , header = TRUE)
+
 windowsMeta$ReportType <- ClassifyReport("105 - Service Delivery Summary" , c("105") , windowsMeta)
 windowsMeta$ReportType <- ClassifyReport("705A - Outpatient Summary <5" , c("705A" , "705 A") , windowsMeta)
 windowsMeta$ReportType <- ClassifyReport("705B - Outpatient Summary >5" , c("705B" , "705 B") , windowsMeta)
