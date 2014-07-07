@@ -48,4 +48,4 @@ MetadataTrace <- ddply(ListForExtract  , .(ReportType) , IdentifyAuthor)
 
 MetadataTrace
 
-write.csv(MetadataTrace , "WindowsMetadataTrace.csv")
+write.csv(MetadataTrace , "WindowsMetadataTrace.csv" , row.names = FALSE)
