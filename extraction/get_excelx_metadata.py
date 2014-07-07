@@ -39,7 +39,7 @@ def full_function(root_path) :
         for filename in files :
             yield get_excel_metadata(filename)
 
-with open('ExcelxMetadata.csv', 'wb') as output :
+with open('J:\\Project\\abce\\ken\\HMIS\\data\\ExcelxMetadata.csv', 'wb') as output :
     writer = csv.writer(output , quoting = csv.QUOTE_MINIMAL)
     for results in full_function('J:\LIMITED_USE\PROJECT_FOLDERS\KEN\ART_ABCE\HMIS\Districts') :
         writer.writerow(results)
