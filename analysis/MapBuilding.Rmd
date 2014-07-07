@@ -280,24 +280,24 @@ for (i in 1:nrow(MappedDistricts)){
 MappedDistricts <- MappedDistricts[-dupl ,]
 Levels <- factor(sort(unique(MappedDistricts$Unit)))
 
-Districts <- merge(Districts , MappedDistricts , all.x = TRUE , by.x  = 'DISTRICT' , by.y = 'NameShape')
-Divisions <- merge(Divisions , MappedDistricts , all.x = TRUE , by.x = 'DIVISION' , by.y = 'NameShape')
-Counties <- merge(Counties, MappedDistricts , all.x = TRUE , by.x = 'COUNTY_NAM' , by.y = 'NameShape')
-Constituencies <- merge(Constituencies , MappedDistricts , all.x = TRUE , 
+DistrictsPlot <- merge(Districts , MappedDistricts , all.x = TRUE , by.x  = 'DISTRICT' , by.y = 'NameShape')
+DivisionsPlot <- merge(Divisions , MappedDistricts , all.x = TRUE , by.x = 'DIVISION' , by.y = 'NameShape')
+CountiesPlot <- merge(Counties, MappedDistricts , all.x = TRUE , by.x = 'COUNTY_NAM' , by.y = 'NameShape')
+ConstituenciesPlot <- merge(Constituencies , MappedDistricts , all.x = TRUE , 
                         by.x = 'CONSTITUEN' , by.y = 'NameShape')
 
 par(mfrow = c(2,3))
-plot(Districts , border = 'white')
+plot(DistrictsPlot , border = 'white')
 legend('left' , legend = Levels , fill = c(1:12) , box.col='white' , 
        cex = 1.3 , y.intersp = 0.8)
-plot(Districts , col = factor(Districts$Unit , levels= Levels , ))
+plot(DistrictsPlot , col = factor(Districts$Unit , levels= Levels , ))
 title(main = 'Districts')
-plot(Divisions , col = factor(Divisions$Unit, levels= Levels))
+plot(DivisionsPlot , col = factor(Divisions$Unit, levels= Levels))
 title(main = 'Divisions')
-plot(Districts , border = 'white')
-plot(Counties , col = factor(Counties$Unit , levels= Levels ))
+plot(DistrictsPlot , border = 'white')
+plot(CountiesPlot , col = factor(Counties$Unit , levels= Levels ))
 title(main = 'Counties')
-plot(Constituencies , col = factor(Constituencies$Unit , levels= Levels))
+plot(ConstituenciesPlot , col = factor(Constituencies$Unit , levels= Levels))
 title(main = 'Constituencies')
 ```
 ### Criteria to identify a district
@@ -324,68 +324,30 @@ facilities <- read.csv('Facilities/KenyaFacilitiesGPS.csv')
 facilities <- subset(facilities , Geolocation != '')
 facilities$Geolocation <- as.character(facilities$Geolocation)
 facilities$Geolocation <- substr(facilities$Geolocation , 2 , nchar(facilities$Geolocation) - 1)
-Longitude <- unlist(strsplit(facilities$Geolocation , ","))[seq(1,
-                                                                length(unlist(strsplit(facilities$Geolocation , ",")))-1 , 2)]
-Latitude <- unlist(strsplit(facilities$Geolocation , ","))[seq(2,                                                        length(unlist(strsplit(facilities$Geolocation ,","))) , 2)]
-
-DistHosp <- grep(pattern = ' DISTRICT HOSPITAL' , facilities$F_NAME)
-SubDistHosp <- grep(pattern = 'SUB-DISTRICT HOSP' , facilities$F_NAME)
-MedCentre <- grep(pattern = 'MEDICAL SERVICES|MEDICARE|MEDICAL CENTRE|HEALTH SERVICE|MED CENTRE', 
-                  facilities$F_NAME)
-NursingHome <- grep(pattern = 'NURSING |M N H|MNH|M&N| MAT' , facilities$F_NAME)
-HealthCentre <- grep(pattern = 'HEALTH CENTRE| H C|HC|HEALTH CARE CENTRE', facilities$F_NAME)
-Dispensary <- grep(pattern = 'DISP' , facilities$F_NAME)
-MissionHC <- grep(pattern = 'MISS H|MISSION HC' , facilities$F_NAME)
-MissionHosp <- grep(pattern = 'MISSION HOSPITAL|MISS. HOSPITAL|CATHOLIC HOSPITAL' , facilities$F_NAME)
-Hosp <- grep(pattern = 'HOSP' , facilities$F_NAME)
-Clinic <- grep(pattern = 'CLINIC' , facilities$F_NAME)
-
-facilities$Level <- ''
-facilities$Level[Hosp] <- 'Hospital'
-facilities$Level[HealthCentre] <- 'Health Center'
-facilities$Level[MedCentre] <- 'Medical Center'
-facilities$Level[Clinic] <- 'Clinic'
-facilities$Level[Dispensary] <- 'Dispensary'
-facilities$Level[NursingHome] <- 'Nursing Home'
-facilities$Level[MissionHC] <- 'Mission Health Center'
-facilities$Level[DistHosp] <- 'District Hospital'
-facilities$Level[MissionHosp] <- 'Mission Hospital'
-facilities$Level[SubDistHosp] <- 'Sub District Hospital'
-
-table(facilities$Level)
-
-par(mfrow = c(2,4))
-plot(Districts)
-points(x = Latitude[facilities$Level %in% c('District Hospital' , 'Sub District Hospital')] , 
-       y = Longitude[facilities$Level %in% c('District Hospital' , 'Sub District Hospital')] , 
-       pch = 21 , 
-       bg = factor(facilities$Level[facilities$Level %in% c('District Hospital' , 
-                                                            'Sub District Hospital')] )
-       )
-plot(Districts)
-points(x = Latitude[facilities$Level %in% c('Health Center' , 'Medical Center')] , 
-       y = Longitude[facilities$Level %in% c('Health Center', 'Medical Center')] , 
-       pch = 21 , 
-       bg = factor(facilities$Level[facilities$Level %in% c('Health Center' , 'Medical Center')])
-       )
+facilities$Longitude <- as.numeric(unlist(strsplit(facilities$Geolocation , ","))[seq(1,
+                                                                length(unlist(strsplit(facilities$Geolocation , ",")))-1 , 2)])
+facilities$Latitude <- as.numeric(unlist(strsplit(facilities$Geolocation , ","))[seq(2,                                                        length(unlist(strsplit(facilities$Geolocation ,","))) , 2)])
 ```
 
 ## Matching health center names with data
 
 ```{r , fig.width=14, fig.height=12 }
+facilities$Extracted <- ''
 for(i in 1:nrow(DataNames)){
   name <- DataNames$NameUnif[i]
-  test <- grep(name , tolower(facilities$F_NAME))
+  test <- grep(name , tolower(facilities$F_NAME[facilities$Facility.Type == 1]))
   if(length(test) == 1){
-    DataNames$Facility[i] <- facilities$Level[test]
-    DataNames$FacilLong[i] <- Longitude[test]
-    DataNames$FacilLat[i] <- Latitude[test]
-  }
-    if(length(test) > 1){
-    DataNames$Facility[i] <- 'Multiple Levels'
-    DataNames$FacilLong[i] <- Longitude[test[1]]
-    DataNames$FacilLat[i] <- Latitude[test[1]]
-  }
+    DataNames$Facility[i] <- facilities$Level[facilities$Facility.Type == 1][test]
+    DataNames$FacilLong[i] <- Longitude[facilities$Facility.Type == 1][test]
+    DataNames$FacilLat[i] <- Latitude[facilities$Facility.Type == 1][test]
+    facilities$Extracted[facilities$Facility.Type == 1][test] <- 'Yes'
+    }
+  if(length(test) > 1){
+    DataNames$Facility[i] <- facilities$Level[facilities$Facility.Type == 1][test][1]
+    DataNames$FacilLong[i] <- Longitude[facilities$Facility.Type == 1][test][1]
+    DataNames$FacilLat[i] <- Latitude[facilities$Facility.Type == 1][test][1]
+    facilities$Extracted[facilities$Facility.Type == 1][test] <- 'Yes'
+    }
 }
 
 par(mfrow = c(2,3))
@@ -410,3 +372,54 @@ points(x = DataNames$FacilLat , y = DataNames$FacilLong , pch = 21 ,
        bg = factor(DataNames$Facility), cex = 1.5)
 ```
 
+Getting all that together
+-----------------------------------------------------------
+
+As we should not have aggregation levels between facilities and district, we should have the following levels  :
+
+
+
+
+1. Districts
+
+By default, we will now consider that districts names that can be found at lower levels are only districts. This will have to be checked later.
+```{r}
+DataNames$FinalLevel <- ''
+DataNames$FinalLevel[grep('District' , DataNames$Unit)] <- 'District'
+DataNames$FinalLevel[DataNames$Unit == 'Simplified District'] <- 'Simplified District'
+DataNames$FinalLevel[DataNames$FinalLevel != '' & !is.na(DataNames$Facility)] <- 'District or Facility'
+DataNames$FinalLevel[DataNames$FinalLevel == '' & !is.na(DataNames$Facility)] <- 'Facility'
+
+DataNamesSimp <- subset(DataNames , !is.na(NameShape))
+
+MappedDistricts <- DataNamesSimp
+
+dupl <- c()
+names <- c()
+for (i in 1:nrow(MappedDistricts)){
+  name <- MappedDistricts$NameShape[i]
+  if (name %in% names){
+    dupl <- c(dupl , i)
+  }
+  if (!(name %in% names)){
+    names <- c(names , name)
+  }
+}
+MappedDistricts <- MappedDistricts[-dupl ,]
+
+
+DistPlot <- merge(Districts , MappedDistricts , all.x = TRUE , by.x  = 'DISTRICT' , by.y = 'NameShape' )
+Levels <- factor(sort(unique(DistPlot$FinalLevel)))
+
+par(mfrow = c(1,1))
+plot(DistPlot , col = factor(DistPlot$FinalLevel))
+points(y = DataNames$FacilLong , x = DataNames$FacilLat , col = 'red')
+legend('bottomleft' , legend = Levels , fill = c(1:3))
+
+unique(DataNames$NameOrig[!(DataNames$NameUnif %in% DataNamesSimp$NameUnif)])
+
+##Gethosp = Gertrude Children's hospital
+##KHH = Kenyatta
+
+
+```

@@ -1,11 +1,11 @@
 import csv
 import xlrd
 
-def Get_705A_files(FilesScreen , ReportName):
+def Get_705B_files(FilesScreen , ReportName):
     FilesScreened = csv.DictReader(open(FilesScreen))
     paths = []
     for row in FilesScreened :
-        if row['Status'] not in ['Nothing Ok' , 'Date and Name not Ok'] and row['ReportType'] == ReportName and row['ReportTested'] != '705B - Outpatient Summary >5':
+        if row['Status'] not in ['Nothing Ok' , 'Date and Name not Ok'] and row['ReportType'] == ReportName and row['ReportTested'] != '705A - Outpatient Summary <5':
             paths.append(row['Path'])
     return paths
 
@@ -17,10 +17,10 @@ def lookup(section , i , j , merge):
         return section.cell_value(i , j)
     return section.cell_value(*merge_cell[0])
 
-def import705A(FilePath, writer):
+def import705B(FilePath, writer):
     book = xlrd.open_workbook(FilePath , formatting_info  = True )
-    assert book.sheet_names() == ['MOH 705A']
-    sheet = book.sheet_by_name('MOH 705A')
+    assert book.sheet_names() == ['MOH 705B']
+    sheet = book.sheet_by_name('MOH 705B')
     START_ROW = 6
     assert sheet.cell_value(START_ROW,0) == 'DISEASES'
     for row in xrange(START_ROW+1, sheet.nrows):
@@ -37,15 +37,15 @@ def import705A(FilePath, writer):
                 continue            
             writer.writerow(t)
 
-with open('705AData.csv', 'wb') as output:
+with open('705BData.csv', 'wb') as output:
     writer = csv.writer(output , delimiter = "\t")
     cntok = 0
     cntnonok = 0
-    for filename in sorted(Get_705A_files('C:\Users\grlurton\Documents\KenyaHMIS\ReportScreen.csv' , '705A - Outpatient Summary <5')):
+    for filename in sorted(Get_705B_files('C:\Users\grlurton\Documents\KenyaHMIS\ReportScreen.csv' , '705B - Outpatient Summary >5')):
         try:
-            import705A(filename, writer)
+            import705B(filename, writer)
             cntok += 1
         except Exception as e:
             print "skipping {} because {}".format(filename, e)
             cntnonok += 1
-        print '705a ok' , cntok , '705a non ok' , cntnonok
+        print '705b ok' , cntok , '705b non ok' , cntnonok

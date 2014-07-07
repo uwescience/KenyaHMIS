@@ -1,0 +1,16 @@
+base
+bitops
+datasets
+graphics
+grDevices
+knitr
+maptools
+methods
+plyr
+RColorBrewer
+RCurl
+sp
+sqlshare
+stats
+stringr
+utils

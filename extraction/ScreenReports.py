@@ -7,7 +7,7 @@ def Get_Report_Meta_Trace(TraceFile , ReportName):
     MetaTrace = csv.DictReader(open(TraceFile))
     for row in MetaTrace :
         if row['DateCreation'] != '':
-            DateCrea = time.strptime(row['DateCreation'], "%m/%d/%Y %H:%M")
+            DateCrea = time.strptime(row['DateCreation'], "%Y-%m-%d %H:%M:%S")
             if row["ReportType"] == ReportName:
                 Trace = {'Author':row['Author'] , 'DateCreated':datetime.datetime(*DateCrea[:5]) , 'ReportTest':ReportName}
         else :
@@ -21,7 +21,7 @@ def Get_Report_Meta_Trace(TraceFile , ReportName):
 # author or date is considered valid
 def Get_Valid_Paths(ReportDescriptionFile , MetaTrace):
     try :
-        DateCrea = time.strptime(ReportDescriptionFile['DateCreated'] , "%Y-%m-%d %H:%M:%S")
+        DateCrea = time.strptime(ReportDescriptionFile['DateCreated'] , "%m/%d/%Y %H:%M")
         DateCrea = datetime.datetime(*DateCrea[:5])
         if ReportDescriptionFile['Author'] in MetaTrace['Author'] :
             if  DateCrea == MetaTrace['DateCreated'] :
@@ -65,5 +65,5 @@ with open('ReportScreen.csv', 'wb') as output :
     writer = csv.writer(output , quoting = csv.QUOTE_MINIMAL)
     writer.writerow(['Author' , 'DateCreated', 'Path' , 'Status','ReportType','ReportTested'])
     for report in ReportTypes:
-        for results in main('C:\Users\grlurton\Documents\KenyaHMIS\MetadataTrace.csv','C:\Users\grlurton\Documents\KenyaHMIS\WindowsMetadata.csv',report) :
+        for results in main('C:\Users\grlurton\Documents\KenyaHMIS\MetadataTrace.csv','C:\Users\grlurton\Documents\KenyaHMIS\WindowsMetadata2.csv',report) :
             writer.writerow(results)
