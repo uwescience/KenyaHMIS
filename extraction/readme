@@ -1,0 +1,22 @@
+###### Extraction of Data from Kenya HMIS Excel Files
+
+### Author: Grégoire Lurton
+### Date : July 2014
+
+
+This ensemble of scripts are used to extract relevant information contained in the Excel files from Kenya HMIS, and to extract the data contained in these files before upload on SqlShare.
+
+In the current version, every output is exported to IHME's J: Drive.
+
+1. Metadata Extraction : 
+	get_excel_metadata.py , get_excelx_metadata.py and get_windows_metadata.py are going through all the excel files, and extract metadata regarding date of creation, last modification, author, and last modifier. This data will be used in the rest of the work to cluster reports by group and / or get information on date of validity of reports.
+
+2. Metadata analysis : 	
+	windows_metadata_trace.r determines a trace specific to each type of report, based on the author of the report, and the date of creation.
+	ScreenReports.py compares each file to each report's trace and attributes to each file a 8 level description of how well a file corresponds to a report type. This description is later used to select the subset of files on which each data extraction scripts will be run.
+
+3. Data Extraction :
+	Parse105.py , Parse705A.py , Parse705B.py and Parse710.py each extract data from specific report types. The script first checks if the file corresponds to a report pattern, and then imports the data in long format (1 line = 1 indicator value). These scripts contain a function to handle merged cells. They output tables that will be uploaded to SqlShare for further data manipulation and sharing.
+
+4. Indicators Mapping :
+	map_indic_105.r , map_indic_705.r and map_indic_710.r are used to standardize the indicators formulation for each report. The most work is done for report 710. It outputs tables that show correspondence between indicators formulation in reports and their unified formulation. These tables will be uploaded to SqlShare for standardization of the data.
