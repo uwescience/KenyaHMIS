@@ -1,11 +1,35 @@
-library(stringr)
+#### This program looks for all the indicators found in reports 710 and unifies the values
+#### It outputs a dictionnary for the indicators to be used for analysis 
 
-indicators <- read.csv("C:/Users/grlurton/Documents/KenyaHMIS/710Indicators.txt" , sep = '\t' , header = FALSE)
-colnames(indicators) <- c('Sheet' , 'Indicator1' , 'Indicator2' , 'Number')
+## Author : Grégoire Lurton
+## Date   : July 2014
+
+setwd("J:/Project/abce/ken/HMIS/data")
+
+library(stringr)
+library(plyr)
+
+Data710 <- read.csv("710Data.csv" , sep = '\t' , header = TRUE , row.names = NULL)
+
+Data710$Indicator1 <- as.character(Data710$Indicator1)
+Data710$Indicator1[Data710$Indicator1 == ""] <- "Empty"
+
+Data710$Indicator2 <- as.character(Data710$Indicator2)
+Data710$Indicator2[Data710$Indicator2 == ""] <- "Empty"
+
+indicators <- ddply(Data710 , .(Indicator1) , 
+                    function(x){
+                      data.frame(unique(as.character(x$Indicator2)))
+                    }
+                    )
+
+colnames(indicators) <- c('Indicator1' , 'Indicator2')
+
 length(unique(indicators$Indicator1))
 indicators$new <- str_trim(indicators$Indicator1)
 indicators$new <- str_replace_all(indicators$new, "  ", " ")
 indicators$new  <- tolower(indicators$new)
+length(unique(indicators$new))
 
 indicators$new[str_replace_all(indicators$new, " ", "") == 'pneumococal1'] <- "pneumococcal 1" 
 indicators$new[str_replace_all(indicators$new, " ", "") == 'pneumococal2'] <- "pneumococcal 2"
@@ -39,7 +63,7 @@ indicators$new[indicators$new %in% vitATher] <- "Vitamin A therapeutic"
 
 vitA100 <- c( "vitamin a-100,000 iu" , "vitamin a 100,000 iu" )
 indicators$new[indicators$new %in% vitA100] <- "vitamin a 100,000 iu" 
-
+length(unique(indicators$new))
 
 
 length(unique(indicators$Indicator2))
@@ -88,7 +112,7 @@ birthDose <- c("birth dose (within 2 weeks)" , "within 2 weeks")
 indicators$new2[indicators$new2 %in% birthDose] <- "birth dose" 
 
 subset(indicators , new2 %in% c("above 1 year"  , "above 1 year (200,000 iu)" ) , select = c(new , new2 , Number))
-##The two are not equivlent
+##The two are not equivalent
 
 subset(indicators , new2 %in% c("lactating mothers"  ,  "lactating mothers (200,000iu)"  ) , select = c(new , new2))
 lactMoth <- c("lactating mothers"  ,  "lactating mothers (200,000iu)"  )
@@ -109,11 +133,6 @@ subset(indicators , new2 %in% c( "12-59 months (200,000 iu)",  "above 1 year (20
 Ab1Yr200 <- c( "12-59 months (200,000 iu)",  "above 1 year (200,000 iu)"  )
 indicators$new2[indicators$new2 %in% Ab1Yr200] <- "above 1 year (200,000 iu)" 
 
-
-##Not equivalent
-
-subset(indicators , new == '' , select= c(new2 , Number))
-
 ####Now checking for empty indicator1
 length(unique(indicators$new2))
 table(indicators$new , indicators$new2)
@@ -122,4 +141,4 @@ sort(unique(indicators$new2))
 out <- subset(indicators , select = c(Indicator1 , Indicator2 , new , new2))
 colnames(out) <- c('Indicator1Orig' , 'Indicator2Orig' , 'Indicator1New' , 'Indicator2New')
 
-write.csv(out , 'DicIndicators710.csv')
+write.csv(out , 'DicoIndicators710.csv')
