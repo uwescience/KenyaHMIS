@@ -57,11 +57,11 @@ def import710(FilePath, writer):
                 continue
             writer.writerow(t)
 
-with open('710Data.csv', 'wb') as output:
+with open('J:\\Project\\abce\\ken\\HMIS\\data\\710Data.csv', 'wb') as output:
     writer = csv.writer(output , delimiter = '\t')
     cntok = 0
     cntnonok = 0
-    for filename in sorted(Get_710_files('C:\Users\grlurton\Documents\KenyaHMIS\ReportScreen.csv' , '710 - Immunization Summary')):
+    for filename in sorted(Get_710_files('J:\\Project\\abce\\ken\\HMIS\\data\\ReportScreen.csv' , '710 - Immunization Summary')):
         try:
             import710(filename, writer)
             cntok += 1
