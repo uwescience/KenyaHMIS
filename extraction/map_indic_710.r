@@ -11,12 +11,6 @@ library(plyr)
 
 Data710 <- read.csv("710Data.csv" , sep = '\t' , header = TRUE , row.names = NULL)
 
-Data710$Indicator1 <- as.character(Data710$Indicator1)
-Data710$Indicator1[Data710$Indicator1 == ""] <- "Empty"
-
-Data710$Indicator2 <- as.character(Data710$Indicator2)
-Data710$Indicator2[Data710$Indicator2 == ""] <- "Empty"
-
 indicators <- ddply(Data710 , .(Indicator1) , 
                     function(x){
                       data.frame(unique(as.character(x$Indicator2)))
