@@ -39,6 +39,7 @@ def import705B(FilePath, writer):
 
 with open('J:\\Project\\abce\\ken\\HMIS\\data\\705BData.csv', 'wb') as output:
     writer = csv.writer(output , delimiter = "\t")
+    writer.writerow(['Path' , 'Indicator' , 'Month' , 'Value'])
     cntok = 0
     cntnonok = 0
     for filename in sorted(Get_705B_files('J:\\Project\\abce\\ken\\HMIS\\data\\ReportScreen.csv' , '705B - Outpatient Summary >5')):

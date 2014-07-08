@@ -59,6 +59,7 @@ def import710(FilePath, writer):
 
 with open('J:\\Project\\abce\\ken\\HMIS\\data\\710Data.csv', 'wb') as output:
     writer = csv.writer(output , delimiter = '\t')
+    writer.writerow(['Path' , 'Indicator1' ,  'Indicator2' , 'Month' , 'Value'])
     cntok = 0
     cntnonok = 0
     for filename in sorted(Get_710_files('J:\\Project\\abce\\ken\\HMIS\\data\\ReportScreen.csv' , '710 - Immunization Summary')):
