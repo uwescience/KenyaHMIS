@@ -19,9 +19,10 @@ def Get_Report_Meta_Trace(TraceFile , ReportName):
 # In current version, date and author are not matched in the Metadata Trace
 # Ie for reports with >1 author or date considered, any combinaison of possible
 # author or date is considered valid
+
 def Get_Valid_Paths(ReportDescriptionFile , MetaTrace):
     try :
-        DateCrea = time.strptime(ReportDescriptionFile['DateCreated'] , "%m/%d/%Y %H:%M")
+        DateCrea = time.strptime(ReportDescriptionFile['DateCreated'] , "%Y-%m-%d %H:%M:%S")
         DateCrea = datetime.datetime(*DateCrea[:5])
         if ReportDescriptionFile['Author'] in MetaTrace['Author'] :
             if  DateCrea == MetaTrace['DateCreated'] :
@@ -49,6 +50,7 @@ def Get_Valid_Paths(ReportDescriptionFile , MetaTrace):
         PathOk  = 'Bad Something'
     ReportScreen = ((ReportDescriptionFile['Author']  , ReportDescriptionFile['DateCreated'],
                      ReportDescriptionFile['Path'] , PathOk , ReportDescriptionFile['ReportType'] , MetaTrace['ReportTest']))
+    print PathOk
     return ReportScreen
 
 def main(TraceFile , ReportDescriptionFile , ReportType):
@@ -61,9 +63,9 @@ def main(TraceFile , ReportDescriptionFile , ReportType):
 ReportTypes = ['105 - Service Delivery Summary' , '705A - Outpatient Summary <5' , '705B - Outpatient Summary >5' , '710 - Immunization Summary' ,
                '711B - RH, TB, Malaria, HIV & Chanis Summary' , '717 - Service Statistics' , '718 - Inpatient Mortality and Morbidity']
 
-with open('ReportScreen.csv', 'wb') as output :
+with open('J:\\Project\\abce\\ken\\HMIS\\data\\ReportScreen.csv', 'wb') as output :
     writer = csv.writer(output , quoting = csv.QUOTE_MINIMAL)
     writer.writerow(['Author' , 'DateCreated', 'Path' , 'Status','ReportType','ReportTested'])
     for report in ReportTypes:
-        for results in main('C:\Users\grlurton\Documents\KenyaHMIS\MetadataTrace.csv','C:\Users\grlurton\Documents\KenyaHMIS\WindowsMetadata2.csv',report) :
+        for results in main('J:\\Project\\abce\\ken\\HMIS\\data\\WindowsMetadataTrace.csv','J:\\Project\\abce\\ken\\HMIS\\data\\WindowsMetadata.csv',report) :
             writer.writerow(results)
