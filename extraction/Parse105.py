@@ -5,7 +5,7 @@ def Get_105_files(FilesScreen , ReportName):
     FilesScreened = csv.DictReader(open(FilesScreen))
     paths = []
     for row in FilesScreened :
-        if row['Status'] not in ['Nothing Ok' , 'Date and Name not Ok'] and row['ReportType'] == ReportName and row['ReportTested'] != '105 - Service Delivery Summary':
+        if row['Status'] not in ['Nothing Ok' , 'Date and Name not Ok'] and row['ReportType'] == ReportName :
             paths.append(row['Path'])
     return paths
 
@@ -22,7 +22,6 @@ def import105(FilePath, writer):
     assert book.sheet_names() == ['Indicators Manual' , 'EligiPOPN_Baseline_Target' , 'July' , 'Aug' , 'Sep' , 'Oct' , 'Nov' , 'Dec' , 'Jan' , 'Feb' , 'March' , 'April' , 'May' , 'June' , 'Achievement']
     for month in book.sheet_names()[2:14]:
         sheet = book.sheet_by_name(month)
-        print month
         A_START_ROW = 6
         assert sheet.cell_value(A_START_ROW,1) == 'Pregnancy, Delivery and the Newborn (upto 2 weeks)'
         for row in xrange(A_START_ROW+1, sheet.nrows):
@@ -39,8 +38,9 @@ def import105(FilePath, writer):
                     continue
                 writer.writerow(t)
 
-with open('J:\\Project\\abce\\ken\\HMIS\\data\\105AData.csv', 'wb') as output:
+with open('J:\\Project\\abce\\ken\\HMIS\\data\\105Data.csv', 'wb') as output:
     writer = csv.writer(output , delimiter = "\t")
+    writer.writerow(['Path' , 'Month' , 'Indicator' , 'Level' , 'Value'])
     cntok = 0
     cntnonok = 0
     for filename in sorted(Get_105_files('J:\\Project\\abce\\ken\\HMIS\\data\\ReportScreen.csv' , '105 - Service Delivery Summary')):
