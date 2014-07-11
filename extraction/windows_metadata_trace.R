@@ -29,6 +29,14 @@ windowsMeta$ReportType <- ClassifyReport("711B - RH, TB, Malaria, HIV & Chanis S
 windowsMeta$ReportType <- ClassifyReport("717 - Service Statistics" , c("717") , windowsMeta)
 windowsMeta$ReportType <- ClassifyReport("718 - Inpatient Mortality and Morbidity" , c("718") , windowsMeta)
 
+###Getting date of report from file names
+
+library(stringr)
+
+windowsMeta$YearReport <- str_extract( windowsMeta$Path , c("2008|2009|2010|2011|2012"))
+
+
+
 ###Names are considered main authors of a report type if they are authors of more than 10% of these reports
 IdentifyAuthor <- function(ReportData){
   NReports <- nrow(ReportData)
@@ -48,5 +56,5 @@ MetadataTrace <- ddply(ListForExtract  , .(ReportType) , IdentifyAuthor)
 
 MetadataTrace
 
-write.csv(windowsMeta , "WindowsMetadata.csv" , row.names = FALSE)
 write.csv(MetadataTrace , "WindowsMetadataTrace.csv" , row.names = FALSE)
+write.csv(windowsMeta , "WindowsMetadata.csv" , row.names = FALSE)

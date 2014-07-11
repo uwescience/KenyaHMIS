@@ -12,7 +12,7 @@ In the current version, every output is exported to IHME's J: Drive.
 	get_excel_metadata.py , get_excelx_metadata.py and get_windows_metadata.py are going through all the excel files, and extract metadata regarding date of creation, last modification, author, and last modifier. This data will be used in the rest of the work to cluster reports by group and / or get information on date of validity of reports.
 
 2. Metadata analysis : 	
-	windows_metadata_trace.r determines a trace specific to each type of report, based on the author of the report, and the date of creation.
+	windows_metadata_trace.r determines a trace specific to each type of report, based on the author of the report, and the date of creation. In the meantime, gets date of reports where it is available in files names.
 	ScreenReports.py compares each file to each report's trace and attributes to each file a 8 level description of how well a file corresponds to a report type. This description is later used to select the subset of files on which each data extraction scripts will be run.
 
 3. Data Extraction :
