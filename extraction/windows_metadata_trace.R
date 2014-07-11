@@ -89,6 +89,16 @@ sum(is.na(windowsMeta$yearCorrect))
 qplot(data = windowsMeta , x = yearSave , y = yearCorrect , geom = "jitter" , col = monthSave) + 
   facet_wrap(~ReportType)
 
+###Getting the district names
+
+getDistrict <- function(x){
+  unlist(strsplit(as.character(x$Path) , "/"))[8]
+}
+
+
+windowsMeta <- merge(windowsMeta , ddply(windowsMeta , .(Path) , getDistrict))
+colnames(windowsMeta)[11] <- 'District'
+
 #################################
 #####Defining the metadata trace#
 #################################
