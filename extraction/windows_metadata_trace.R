@@ -1,6 +1,6 @@
 #### This program outputs a metadata profile for the different type of reports in Kenya HMIS
 #### Based on the windows metadata extracted with python script get_windows_metadata.py 
-#### It also corrects the date of reports using saving dates
+#### It also corrects the date of reports using saving dates and extracts district from path of files
 
 ## Author : Grégoire Lurton
 ## Date   : July 2014
