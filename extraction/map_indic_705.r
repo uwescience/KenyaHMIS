@@ -32,5 +32,5 @@ sort(unique(indicatorsB$new))
 
 indicatorsB$new[indicatorsB$Indicator == "prepared by; juliana ngoa---dhrio"] <- ""
 
-write.csv(indicatorsA , 'DicoIndicators705A.csv')
-write.csv(indicatorsB , 'DicoIndicators705B.csv')
+write.csv(indicatorsA , 'DicoIndicators705A.csv', row.names = FALSE)
+write.csv(indicatorsB , 'DicoIndicators705B.csv', row.names = FALSE)

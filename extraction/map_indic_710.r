@@ -135,4 +135,4 @@ sort(unique(indicators$new2))
 out <- subset(indicators , select = c(Indicator1 , Indicator2 , new , new2))
 colnames(out) <- c('Indicator1Orig' , 'Indicator2Orig' , 'Indicator1New' , 'Indicator2New')
 
-write.csv(out , 'DicoIndicators710.csv')
+write.csv(out , 'DicoIndicators710.csv', row.names = FALSE)

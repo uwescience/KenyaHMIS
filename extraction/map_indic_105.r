@@ -21,4 +21,4 @@ length(unique(indicators$new))
 
 sort(unique(indicators$new))
 
-write.csv(indicators , 'DicoIndicators105.csv')
+write.csv(indicators , 'DicoIndicators105.csv' , row.names = FALSE )
