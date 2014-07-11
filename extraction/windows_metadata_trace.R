@@ -67,7 +67,7 @@ ChangePreviousYear <- windowsMeta$monthSave %in% c("Jan" , "Feb" , "Mar") & is.n
 windowsMeta$yearCorrect[ChangePreviousYear] <- as.numeric(windowsMeta$yearSave[ChangePreviousYear])- 1
 
 WrongYear <- windowsMeta$ReportType %in% StartYearSave & windowsMeta$yearSave < windowsMeta$YearReport
-windowsMeta$yearCorrect[WrongYear] <- NA
+windowsMeta$yearCorrect[WrongYear] <- "pb with year"
 
 windowsMeta$yearCorrect[ChangePreviousYear == FALSE & WrongYear == FALSE & !is.na(WrongYear)] <- 
   windowsMeta$YearReport[ChangePreviousYear == FALSE & WrongYear == FALSE & !is.na(WrongYear)]
@@ -75,12 +75,19 @@ windowsMeta$yearCorrect[ChangePreviousYear == FALSE & WrongYear == FALSE & !is.n
 qplot(data = windowsMeta , x = yearSave , y = yearCorrect , geom = "jitter" , col = monthSave) + 
   facet_wrap(~ReportType)
 
-
 ###For reports saved in mid-year
 
 StartYearSave <- c("105 - Service Delivery Summary")
 table(windowsMeta$monthSave[windowsMeta$ReportType %in% StartYearSave])
 
+GetYear <- windowsMeta$ReportType %in% StartYearSave & windowsMeta$monthSave %in% c("Jul" , "Aug" ,"Sep" , "Oct")
+
+windowsMeta$yearCorrect[GetYear] <- windowsMeta$yearSave[GetYear]
+
+sum(is.na(windowsMeta$yearCorrect))
+
+qplot(data = windowsMeta , x = yearSave , y = yearCorrect , geom = "jitter" , col = monthSave) + 
+  facet_wrap(~ReportType)
 
 #################################
 #####Defining the metadata trace#
