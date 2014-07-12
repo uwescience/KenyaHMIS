@@ -1,3 +1,11 @@
+#### This program maps the names of the zones for which the data is recorded in the original HMIS Data to an existing division of Kenya Territory
+#### It outputs a dictionnary for the zones in the HMIS Data that are matched to zones in a given shapefile + specific GPS coordinates for some zones
+
+## Author : Grégoire Lurton
+## Date   : July 2014
+
+setwd("J:/Project/abce/ken/HMIS/")
+
 library(sp)
 library(RColorBrewer)
 library(sqlshare)
@@ -8,15 +16,19 @@ library(rgdal)
 library(plyr)
 library(ggplot2)
 
-##Useful Functions
+##Function to format the names of zones
 formatNames <- function(x){
   tolower(str_trim(as.character(x)))
 }
 
-Kenya <- readShapePoly('Shapefiles/Districts//kenya_districts98.shp')
+##Loading shapefile for Kenya Districts
+Kenya <- readShapePoly('addata/Shapefiles/Districts//kenya_districts98.shp')
 Kenya$DISTRICT <- formatNames(Kenya$DISTRICT)
 
-DataDistricts <-  as.character(fetch.data.frame("select distinct lower(ltrim(rtrim(District))) as District from [grlurton@washington.edu].[Rep705BTotal]")$District)
+##Getting list of zones in the data from reports 705B, uploaded in sqlshare
+DataDistricts <-  
+  as.character(fetch.data.frame("select distinct lower(ltrim(rtrim(District))) as District from [grlurton@washington.edu].[705BDataComplete]")$District)
+
 ##Processing Names as to have all combinations possible of composed names
 DataNames <- data.frame(NameOrig = DataDistricts , NameUnif = DataDistricts ,  stringsAsFactors = FALSE)
 n <- nrow(DataNames)
@@ -87,9 +99,8 @@ DataNames$NameShape[DataNames$NameOrig == 'meru south'] <- 'meru south'
 DataNames$Unit[DataNames$NameOrig == 'west pokot'] <- 'District'
 DataNames$NameShape[DataNames$NameOrig == 'west pokot'] <- 'west pokot'
 
-
 ##Loading facilities
-facilities <- read.csv('Facilities/KenyaFacilitiesGPS.csv')
+facilities <- read.csv('addata/KenyaFacilitiesGPS.csv')
 facilities <- subset(facilities , Geolocation != '' , select = c(F_NAME , Province , District , Division , Facility.Type , Geolocation))
 colnames(facilities) <- c('FacilityName' , 'FacilityProvince' , 'FacilityDistrict' ,'FacilityDivision' , 'FacilityType' , 'Geolocation')
 
@@ -171,7 +182,8 @@ for(i in 1:length(unique(DataNames$NameOrig))){
 FinalDataMap$Level[FinalDataMap$Name == 'westlands'] <- ''
 table(FinalDataMap$Level)
 
-##Imputing District to facilities based on their location
+##Imputing District to facilities based on their location 
+##Here we give location in the shapefile we use
 coordinates(facilities) = ~Latitude+Longitude
 facilities$DistrictShape <- over(facilities, Kenya)
 facilities <- data.frame(facilities)
@@ -181,6 +193,11 @@ for (name in FinalDataMap$FacilityName[FinalDataMap$Level %in% c('Facility' , 'M
   print(name)
   FinalDataMap$DistNameShape[FinalDataMap$FacilityName == name] <-facilities$ShapeDistrict[facilities$FacilityName == name]
 }
+
+
+##Rechercher les noms des donnnées dans divison; location et sub-location de la bdd facilities
+
+
 
 FinalDataMap$DistNameShape[FinalDataMap$Name %in% c("east pokot")] <- "baringo"
 FinalDataMap$Level[FinalDataMap$Name %in% c("buret")] <- "Unclear"
@@ -265,4 +282,4 @@ sort(FinalDataMap$Name[is.na(FinalDataMap$DistNameShape)])
 
 table(FinalDataMap$Level)
 
-write.csv(FinalDataMap , 'DistricMapping.csv')
+write.csv(FinalDataMap , 'DistrictMapping.csv' , row.names = FALSE)
