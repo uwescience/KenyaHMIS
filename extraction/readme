@@ -20,3 +20,8 @@ In the current version, every output is exported to IHME's J: Drive.
 
 4. Indicators Mapping :
 	map_indic_105.r , map_indic_705.r and map_indic_710.r are used to standardize the indicators formulation for each report. The most work is done for report 710. It outputs tables that show correspondence between indicators formulation in reports and their unified formulation. These tables will be uploaded to SqlShare for standardization of the data.
+
+
+Once these steps are made, the data, windows Metadata and Indicators mapping outputs are uploaded to sqlshare (https://sqlshare.escience.washington.edu/) where the data undergoes two adaptation :
+	1. Variable cleaning, using the output of indicator mapping
+	2. Adding of year of report and district through the windowsmetadata file.
