@@ -32,7 +32,6 @@ while (length(pagesToRead) > 0){
   extractOrg <- data.frame(unitName =  character() , unitLevel =  character() ,
                            child_adress = character() , child_name = character())
   for (url in pagesToRead){
-    print(url)
     out <- getChildren(url)
     extractOrg <- rbind(extractOrg , out)
   }
