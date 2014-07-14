@@ -36,10 +36,11 @@ while (length(pagesToRead) > 0){
     out <- getChildren(url)
     extractOrg <- rbind(extractOrg , out)
   }
+  orgUnits <- rbind(orgUnits , extractOrg)
   child_adress <- paste(as.character(extractOrg$child_adress[!is.na(extractOrg$child_adress)]) ,
                        "xml" , sep = '.')
   pagesRead <- c(pagesRead , pagesToRead)
-  count <- count + length(pagesRead)
+  count <- count + length(pagesToRead)
   pagesToRead <- c(pagesToRead , child_adress)
   pagesToRead <- pagesToRead[!(pagesToRead %in% pagesRead )]
   print(paste("pages to Read" , length(pagesToRead) , sep = " "))
