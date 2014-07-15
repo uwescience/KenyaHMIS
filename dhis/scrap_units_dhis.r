@@ -1,3 +1,12 @@
+#### This program scrapes the online Kenya DHIS2 metadata to retrieve the structure of the organization units in the 
+#### Health system in Kenya
+
+## Author : Grégoire Lurton
+## Date   : July 2014
+
+
+setwd("J:/Project/abce/ken/HMIS/")
+
 library(RCurl)
 library(XML)
 
@@ -45,3 +54,5 @@ while (length(pagesToRead) > 0){
   print(paste("pages to Read" , length(pagesToRead) , sep = " "))
   print(paste("count =" , count , "; percent done" , count / 12664 , sep = " " ))
 }
+
+write.csv(orgUnits , 'addata/dhis_orgunits.csv' , row.names = FALSE)
