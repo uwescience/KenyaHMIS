@@ -10,72 +10,64 @@ library(plyr)
 library(splines)
 library(MASS)
 library(stringr)
+library(ggplot2)
+library(zoo)
+
 gpclibPermit()
 
-iso <- as.character(commandArgs()[3])
+setwd("J:/Project/abce/ken/HMIS")
 
 # INITIAL CROP of raw pfpr to country. 
-Kenya <- readShapePoly(paste0("Shapefiles/Districts/kenya_districts98.shp"))
-Kenya$DISTRICT <- formatNames(Kenya$DISTRICT)
-Kenya$DISTRICT[Kenya$DISTRICT == 'mt.elgon'] <- 'mt. elgon'
-
 popData <- raster("J://WORK/01_covariates/02_inputs/environmental/data/GPW/full_ts_1980_2015/glp2010ag.asc")
-#pfprData <- raster("J://Project/Coverage/Malaria Intervention Coverage/Map Making/nick/map2010.asc")
-pfprData <- raster("C://Users/grlurton/Documents/KenyaHMIS/pfpr/map2010.asc")
+pfprData <- raster("J://Project/Coverage/Malaria Intervention Coverage/Map Making/nick/map2010.asc")
+#pfprData <- raster("addata/pfpr/map2010.asc")
 
-KenyaPop <- crop(popData,Kenya)
+KenyaPop <- crop(popData,zones)
 Kenyapfpr <- crop(pfprData,KenyaPop)
 
+save.image(file = 'addata/CroppedPfpr.rdata')
 
-pdf("pfprplot.pdf", width=4, height=4)
-plot(Kenyapfpr)
-plot(Kenya , add = TRUE)
-title(main = 'pfpr in Kenya')
-dev.off()
+formatNames <- function(x){
+  tolower(str_trim(as.character(x)))
+}
 
-pdf("pfprDistrict", width=4, height=4)
-plot(pfpr.masked)
-title(main = 'District Number of clinical pfpr cases')
-dev.off()
+iso <- as.character(commandArgs()[3])
+zones <- readShapePoly("data/zones.shp")
 
-library(stringr)
 ghapfprpop <- c()
 population <- c()
-for (Dist in 1:length(unique(FinalDataMap$DistNameShape))){
-  District <- unique(FinalDataMap$DistNameShape)[Dist]
-  if(District %in% formatNames(Kenya$DISTRICT)){
-    print(District)
-    Shap <- Kenya[formatNames(Kenya$DISTRICT) == District , ]
-    DistPop <- crop(KenyaPop , Shap)
-    DistPfpr <- crop(Kenyapfpr , DistPop)
-    DistPop <- crop(DistPop , DistPfpr)
-    print(paste('rows -' , nrow(DistPfpr) , "x" , nrow(DistPop) ,sep = ' '))
-    print(paste('cols -' , ncol(DistPfpr) , "x" , ncol(DistPop) ,sep = ' '))
-    # The division by 25 after (c,fact=5) ensures that the disaggregated cells sum to the original cell that they 
-    ##were split from.  Not necessary if you're just interested in prevalence.
-    # The disaggregation factor can be found using nrow(pfprcrop)/nrow(c) or ncol(pfprcrop)/ncol(c)
-    cdisag <- disaggregate(DistPop,fact=5)
-    print(ncol(cdisag))
-    pw_pfpr <- overlay(cdisag,DistPfpr,fun=function(x,y){return(x*y/25)})
-    ##Mask the values that are not exactly in the shapefile
-    crop <- setValues(pw_pfpr, NA)
-    myshp.r <- rasterize(Shap , crop)
-    pfpr.masked <- mask(x = pw_pfpr , mask = myshp.r)
-    ##Same for population
-    crop <- setValues(cdisag, NA)
-    population.masked <- mask(x = cdisag/25 , mask = myshp.r)
-    # Extract total pfpr population
-    ghapfprpop[Dist] <- extract(pfpr.masked,Shap,fun='sum',na.rm=TRUE)
-    population[Dist] <- extract(population.masked , Shap , fun = 'sum' , na.rm=TRUE)
-  }
-  else print(paste(District , "not in available data" , sep = " "))
+
+for (District in zones$districts){
+  print(District)
+  Shap <- zones[zones$districts == District , ]
+  DistPop <- crop(KenyaPop , Shap)
+  DistPfpr <- crop(Kenyapfpr , DistPop)
+  DistPop <- crop(DistPop , DistPfpr)
+  print(paste('rows -' , nrow(DistPfpr) , "x" , nrow(DistPop) ,sep = ' '))
+  print(paste('cols -' , ncol(DistPfpr) , "x" , ncol(DistPop) ,sep = ' '))
+  # The division by 25 after (c,fact=5) ensures that the disaggregated cells sum to the original cell that they 
+  ##were split from.  Not necessary if you're just interested in prevalence.
+  # The disaggregation factor can be found using nrow(pfprcrop)/nrow(c) or ncol(pfprcrop)/ncol(c)
+  cdisag <- disaggregate(DistPop,fact=5)
+  print(ncol(cdisag))
+  pw_pfpr <- overlay(cdisag,DistPfpr,fun=function(x,y){return(x*y/25)})
+  ##Mask the values that are not exactly in the shapefile
+  crop <- setValues(pw_pfpr, NA)
+  myshp.r <- rasterize(Shap , crop)
+  pfpr.masked <- mask(x = pw_pfpr , mask = myshp.r)
+  ##Same for population
+  crop <- setValues(cdisag, NA)
+  population.masked <- mask(x = cdisag/25 , mask = myshp.r)
+  # Extract total pfpr population
+  ghapfprpop <- c(ghapfprpop , extract(pfpr.masked,Shap,fun='sum',na.rm=TRUE))
+  population <- c(population , extract(population.masked , Shap , fun = 'sum' , na.rm=TRUE))
 }
   
-pfpr <- data.frame(District = unique(FinalDataMap$DistNameShape) , ghapfprpop , population , pfpr = ghapfprpop / population)
-qplot(x = pfpr$District , y= pfpr$population , geom = 'bar')+ coord_flip()
+pfpr <- data.frame(District = zones$districts , ghapfprpop , population , pfpr = ghapfprpop / population)
+#qplot(x = pfpr$District , y= as.numeric(pfpr$population) )+ coord_flip()
 
-MapPfpr <- Kenya
-MapPfpr@data <- merge(pfpr , Kenya@data , by.x  = 'District' , by.y = 'DISTRICT' , all = TRUE)
+MapPfpr <- zones
+MapPfpr@data <- merge(pfpr , zones@data , by.x  = 'District' , by.y = 'districts' , all = TRUE)
 
 colors <- brewer.pal(4, "Oranges")
 pal <- colorRampPalette(c('white' , 'lightblue', 'darkred'))
@@ -88,15 +80,18 @@ title(main = 'Nbr Malaria infected people')
 par(mfrow = c(1,1))
 
 
-MalariaCases <- fetch.data.frame('select DistNameShape as District , Value , Level , Year , Month
-                                  FROM [grlurton@washington.edu].[Rep705BCleanDistrict]
-                                  WHERE Indicator=\'Confirmed Malaria\' AND isnumeric(Value) = 1;')
+MalariaCases <- fetch.data.frame('select District , Value , Year , Month 
+                                  FROM [grlurton@washington.edu].[705BDataComplete]
+                                  WHERE Indicator=\'confirmed malaria\' AND isnumeric(Value) = 1;')
 
-MalariaCases <- CleanMonths(MalariaCases)
+#MalariaCases <- CleanMonths(MalariaCases)
 MalariaCases$Month <- as.yearmon(paste(MalariaCases$Month , MalariaCases$Year  , sep = '-') , "%B-%Y")
 
 MalariaStat <- ddply(MalariaCases , .(District) , function(x){data.frame(mean  = mean(x$Value) , median = median(x$Value))})
 CountCases <- ddply(MalariaCases , .(District , Month) , function(x){data.frame(sum  = sum(x$Value , na.rm = TRUE))})
+
+MalariaStat$District <- formatNames(MalariaStat$District)
+CountCases$District <- formatNames(CountCases$District)
 
 DataPlot <- merge(MalariaStat, pfpr , all.y = FALSE , by.x = 'District' , by.y = 'District')
 SumDataPlot <- merge(CountCases, pfpr , all.y = FALSE , by.x = 'District' , by.y = 'District')
