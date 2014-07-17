@@ -8,7 +8,6 @@
 
 
 require(raster)
-require(sp)
 require(maptools)
 library(rgdal)
 library(RColorBrewer)
