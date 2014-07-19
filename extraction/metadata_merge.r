@@ -1,11 +1,14 @@
-#### merges metadata profiles from different reports and merges them with corresponding datasets
-#### output are the total datasets with all data and metadata
+#### This program merges metadata profiles from different reports and merges them 
+#### output are the total datasets with all data and metadata with corresponding datasets
+#### It also cleans and standardizes month names and district names
 
 #### This part was originally made in sqlshare but ended up with problems in the 105. 
 #### If solution found, may be moved back
 
 ## Author : Grégoire Lurton
 ## Date   : July 2014
+
+library(stringr)
 
 setwd("J:/Project/abce/ken/HMIS/data")
 
@@ -16,10 +19,52 @@ data710 <- read.csv('710Data.csv' , sep = "\t")
 
 WindowsMeta <- read.csv('WindowsMetadata.csv')
 
-data105 <- subset(merge(data105, WindowsMeta , by = "Path") , 
-                  select = c(Path , Indicator , District , Level , Month , yearCorrect , Value ))
+###Functions for standardizing months names and district names
+
+formatNames <- function(x){
+  tolower(str_trim(as.character(x)))
+}
+
+months <- c('january' , 'february' , 'march' , 'april' , 'may' , 'june' , 'july' , 'august' , 'september' , 
+            'october' , 'november' , 'december')
+
+CleanMonths <- function(x){
+  x$Month <- as.character(x$Month)
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'apr'] <- 'april'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'aug'] <- 'august'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'dec'] <- 'december'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'feb'] <- 'february'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'jan'] <- 'january'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'jul'] <- 'july'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'jun'] <- 'june'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'may'] <- 'may'
+  x$Month[tolower(substr(x$Month , 1 ,2)) == 'ma' & x$Month != 'may'] <- 'march'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'nov'] <- 'november'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'oct'] <- 'october'
+  x$Month[tolower(substr(x$Month , 1 ,3)) == 'sep'] <- 'september'
+  x$Month[!(x$Month %in% months)] <- NA
+  x$Month <- factor(x$Month , ordered(months))
+  x
+}
+
+PrepareData <- function(x){
+  x <- CleanMonths(x)
+  x$District <- formatNames(x$District)
+  x 
+}
+
+### integration of metadata + cleaning of data
+
+data105 <- PrepareData(subset(merge(data105, WindowsMeta , by = "Path") , 
+                  select = c(Path , Indicator , District , Level , Month , yearCorrect , Value )))
 colnames(data105)[6] <- "Year"
-data105$Year[data105$Month %in% c("")]
+
+##Changing year number for second half of year for 105 report because they are made from july to june
+data105$Year <- as.numeric(as.character(data105$Year))
+data105$Year[data105$Month %in% 
+               c("july" , "august" , "september" , "october" , "november" , "december")] <-
+  data105$Year[data105$Month %in% 
+                 c("july" , "august" , "september" , "october" , "november" , "december")] - 1
 
 data705A <- subset(merge(data705A, WindowsMeta , by = "Path") , 
                   select = c(Path , Indicator , District , Month , yearCorrect , Value ))

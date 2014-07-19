@@ -105,7 +105,7 @@ subset(indicators , new2 %in% c("birth dose (within 2 weeks)" , "within 2 weeks"
 birthDose <- c("birth dose (within 2 weeks)" , "within 2 weeks")
 indicators$new2[indicators$new2 %in% birthDose] <- "birth dose" 
 
-subset(indicators , new2 %in% c("above 1 year"  , "above 1 year (200,000 iu)" ) , select = c(new , new2 , Number))
+subset(indicators , new2 %in% c("above 1 year"  , "above 1 year (200,000 iu)" ) , select = c(new , new2))
 ##The two are not equivalent
 
 subset(indicators , new2 %in% c("lactating mothers"  ,  "lactating mothers (200,000iu)"  ) , select = c(new , new2))

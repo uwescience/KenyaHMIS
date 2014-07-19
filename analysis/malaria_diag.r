@@ -29,45 +29,8 @@ Malaria105 <- fetch.data.frame('select District , Value , Year , Month , Level ,
                                         OR Indicator= \'number of < 1 deaths occuring at facility\'
                                         AND isnumeric(Value) = 1;')
 
-months <- c('january' , 'february' , 'march' , 'april' , 'may' , 'june' , 'july' , 'august' , 'september' , 
-            'october' , 'november' , 'december')
 
-CleanMonths <- function(x){
-  x$Month <- as.character(x$Month)
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'apr'] <- 'april'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'aug'] <- 'august'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'dec'] <- 'december'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'feb'] <- 'february'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'jan'] <- 'january'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'jul'] <- 'july'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'jun'] <- 'june'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'may'] <- 'may'
-  x$Month[tolower(substr(x$Month , 1 ,2)) == 'ma' & x$Month != 'may'] <- 'march'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'nov'] <- 'november'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'oct'] <- 'october'
-  x$Month[tolower(substr(x$Month , 1 ,3)) == 'sep'] <- 'september'
-  x$Month[!(x$Month %in% months)] <- NA
-  x$Month <- factor(x$Month , ordered(months))
-  x
-}
-
-formatNames <- function(x){
-  tolower(str_trim(as.character(x)))
-}
-
-PrepareData <- function(x){
-  x <- CleanMonths(x)
-  x$CalMonth <- as.Date(as.yearmon(paste(x$Month , x$Year  , sep = '-') , "%B-%Y"))
-  x$District <- formatNames(x$District)
-  x <- merge(x , zones@data , by.x = "District" , by.y = 'District' , all.y = FALSE ) 
-  x$Rate <- x$Value / x$population
-  x <- subset(x , !is.na(Value) & District %in% zones@data$District & !is.na(CalMonth))
-  x 
-}
-
-MalariaDataAdultPrep <- PrepareData(MalariaDataAdult)
-MalariaDataAdultPrep$Indicator <- as.character(MalariaDataAdultPrep$Indicator)
-MalariaDataAdultPrep$Indicator[MalariaDataAdultPrep$Indicator == "confirmed malaria "] <- "confirmed malaria"
+MalariaDataAdultPrep <- MalariaDataAdult
 
 MalariaDataPedPrep <- PrepareData(MalariaDataPed)
 Malaria105Prep <- PrepareData(Malaria105)

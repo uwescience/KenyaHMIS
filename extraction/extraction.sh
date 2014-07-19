@@ -12,11 +12,9 @@ python Parse705A.py
 python Parse705B.py
 python Parse710.py
 
-
 Rscript map_indic_105.r
 Rscript map_indic_705.r
 Rscript map_indic_710.r
 
-Rscript districts_mapping.r
-
 Rscript metadata_merge.r
+       
