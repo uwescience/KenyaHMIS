@@ -65,6 +65,8 @@ data105$Year[data105$Month %in%
                c("july" , "august" , "september" , "october" , "november" , "december")] <-
   data105$Year[data105$Month %in% 
                  c("july" , "august" , "september" , "october" , "november" , "december")] - 1
+print("105 clean")
+print('705A clean')
 
 data705A <- subset(merge(data705A, WindowsMeta , by = "Path") , 
                   select = c(Path , Indicator , District , Month , yearCorrect , Value ))
@@ -72,12 +74,22 @@ colnames(data705A)[5] <- "Year"
 data705B <- subset(merge(data705B, WindowsMeta , by = "Path") , 
                    select = c(Path , Indicator , District , Month , yearCorrect , Value ))
 colnames(data705B)[5] <- "Year"
+print('705B clean')
+
 data710 <- subset(merge(data710, WindowsMeta , by = "Path") , 
                    select = c(Path , Sheet , Indicator1 , Indicator2 , 
                               District , Month , yearCorrect , Value ))
 colnames(data710)[7] <- "Year"
+print('710 clean')
 
-write.table(data105  , '105Data.csv' , sep = "\t" , row.names = FALSE)
-write.table(data705A  , '705AData.csv' , sep = "\t" , row.names = FALSE)
-write.csv(data705B  , '705BData.csv' , sep = "\t" , row.names = FALSE)
-write.csv(data710  , '710Data.csv' , sep = "\t" , row.names = FALSE)
+print('Saving Clean files')
+print('Saving 105')
+write.table(data105  , '105Data.csv' , sep = "\t" , row.names = FALSE , quote = FALSE)
+print('Saving 705A')
+write.table(data705A  , '705AData.csv' , sep = "\t" , row.names = FALSE , quote = FALSE)
+print('Saving 705B')
+write.table(data705B  , '705BData.csv' , sep = "\t" , row.names = FALSE , quote = FALSE)
+print('Saving 710')
+write.table(data710  , '710Data.csv' , sep = "\t" , row.names = FALSE , quote = FALSE)
+
+q()
