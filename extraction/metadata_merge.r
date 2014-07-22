@@ -2,7 +2,7 @@
 #### output are the total datasets with all data and metadata with corresponding datasets
 #### It also cleans and standardizes month names and district names
 
-#### This part was originally made in sqlshare but ended up with problems in the 105. 
+#### This part was originally made in sqlshare but ended up with problems in the 105 because of reporting period 
 #### If solution found, may be moved back
 
 ## Author : Grégoire Lurton
