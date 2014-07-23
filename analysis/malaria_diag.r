@@ -34,23 +34,9 @@ Malaria105 <- fetch.data.frame('select District , Value , Year , Month , Level ,
 MalariaDataAdult$Cohort <- "> 5 years"
 MalariaDataPed$Cohort <- "< 5 years"
 
-
-
-
 MalariaData <- rbind(MalariaDataAdult , MalariaDataPed)
 MalariaData$CalMonth <- as.Date(as.yearmon(paste(MalariaData$Month , MalariaData$Year  , sep = '-') , "%B-%Y"))
 Malaria105$CalMonth <- as.Date(as.yearmon(paste(Malaria105$Month , Malaria105$Year  , sep = '-') , "%B-%Y"))
-
-
-####A enlever
-##################################################################
-formatNames <- function(x){
-  library(stringr)
-  tolower(str_trim(as.character(x)))
-}
-
-MalariaData$District <- formatNames(MalariaData$District)
-##################################################################
 
 
 ratio_clinic_confirm <- ddply(MalariaData , .( CalMonth , District , Cohort) ,

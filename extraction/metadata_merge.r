@@ -66,15 +66,15 @@ data105$Year[data105$Month %in%
   data105$Year[data105$Month %in% 
                  c("july" , "august" , "september" , "october" , "november" , "december")] - 1
 
-data705A <- subset(merge(data705A, WindowsMeta , by = "Path") , 
-                  select = c(Path , Indicator , District , Month , yearCorrect , Value ))
+data705A <- PrepareData(subset(merge(data705A, WindowsMeta , by = "Path") , 
+                  select = c(Path , Indicator , District , Month , yearCorrect , Value )))
 colnames(data705A)[5] <- "Year"
-data705B <- subset(merge(data705B, WindowsMeta , by = "Path") , 
-                   select = c(Path , Indicator , District , Month , yearCorrect , Value ))
+data705B <- PrepareData(subset(merge(data705B, WindowsMeta , by = "Path") , 
+                   select = c(Path , Indicator , District , Month , yearCorrect , Value )))
 colnames(data705B)[5] <- "Year"
-data710 <- subset(merge(data710, WindowsMeta , by = "Path") , 
+data710 <- PrepareData(subset(merge(data710, WindowsMeta , by = "Path") , 
                    select = c(Path , Sheet , Indicator1 , Indicator2 , 
-                              District , Month , yearCorrect , Value ))
+                              District , Month , yearCorrect , Value )))
 colnames(data710)[7] <- "Year"
 
 write.table(data105  , '105Data.csv' , sep = "\t" , row.names = FALSE)
