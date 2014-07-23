@@ -25,7 +25,7 @@ length(unique(indicatorsB$Indicator))
 indicatorsB$new <- str_trim(indicatorsB$Indicator)
 indicatorsB$new <- str_replace_all(indicatorsB$Indicator, "  ", " ")
 indicatorsB$new  <- tolower(indicatorsB$Indicator)
-indicatorsB$new[indicatorsB$Indicator == "Confirmed Malaria "] <- "confirmed Malaria"
+indicatorsB$new[indicatorsB$Indicator == "Confirmed Malaria "] <- "confirmed malaria"
 length(unique(indicatorsB$new))
 
 sort(unique(indicatorsA$new))
