@@ -1,3 +1,10 @@
+#### This program compares the Pfpr levels in the different zones for which we have data
+#### to the diagnostic of malaria, both clinic or confirmed, in the facilities data
+
+
+## Author : Grégoire Lurton
+## Date   : July 2014
+
 library(maptools)
 library(sqlshare)
 library(zoo)
@@ -17,63 +24,83 @@ plot(pfprZones , col = pal(50)[cut(pfprZones$ghapfprpop,breaks = 50)])
 title(main = 'Nbr Malaria infected people')
 par(mfrow = c(1,1))
 
-MalariaCases <- fetch.data.frame('select District , Value , Year , Month , Indicator
-                                 FROM [grlurton@washington.edu].[705BDataComplete]
-                                 WHERE Indicator=\'confirmed malaria \' OR Indicator = \'clinical malaria\' AND isnumeric(Value) = 1;')
+MalariaDataPed <- fetch.data.frame('select District , Value , Year , Month , Indicator
+                                 FROM [grlurton@washington.edu].[705ADataClean]
+                                 WHERE Indicator=\'confirmed malaria\' OR Indicator=\'clinical malaria\' AND isnumeric(Value) = 1;')
+MalariaDataAdult <- fetch.data.frame('select District , Value , Year , Month , Indicator
+                                 FROM [grlurton@washington.edu].[705BDataClean]
+                                 WHERE Indicator=\'confirmed malaria\' OR Indicator=\'clinical malaria\' AND isnumeric(Value) = 1;')
 
-MalariaCases$Month <- as.yearmon(paste(MalariaCases$Month , MalariaCases$Year  , sep = '-') , "%B-%Y")
+MalariaDataAdult$Cohort <- "> 5 years"
+MalariaDataPed$Cohort <- "< 5 years"
 
-MalariaStat <- ddply(MalariaCases , .(District) , function(x){
-  data.frame(meanConf  = mean(x$Value[x$Indicator == 'confirmed malaria ']  , na.rm = T) , 
-             medianConf = median(x$Value[x$Indicator == 'confirmed malaria '], na.rm = T) ,
-             meanClin  = mean(x$Value[x$Indicator == 'clinical malaria'], na.rm = T) , 
-             medianClin = median(x$Value[x$Indicator == 'clinical malaria'], na.rm = T))})
-CountCases <- ddply(MalariaCases , .(District , Month) , function(x){
-  data.frame(sumConf  = sum(x$Value[x$Indicator == 'confirmed malaria '] , na.rm = TRUE),
-             sumClin = sum(x$Value[x$Indicator == 'clinical malaria'] , na.rm = TRUE))})
+MalariaData <- rbind(MalariaDataAdult , MalariaDataPed)
+MalariaData$CalMonth <- as.Date(as.yearmon(paste(MalariaData$Month , MalariaData$Year  , sep = '-') , "%B-%Y"))
 
-####A enlever
-##################################################################
-formatNames <- function(x){
-  library(stringr)
-  tolower(str_trim(as.character(x)))
-}
 
-MalariaStat$District <- formatNames(MalariaStat$District)
-CountCases$District <- formatNames(CountCases$District)
-##################################################################
+TotalCases <- ddply(MalariaData , .(District , CalMonth) , function(x){
+  data.frame(TotConf  = sum(x$Value[x$Indicator == 'confirmed malaria'] , na.rm = TRUE),
+             TotClin = sum(x$Value[x$Indicator == 'clinical malaria'] , na.rm = TRUE))})
+
+TotalCases <- subset(TotalCases , TotConf != 0 & TotClin != 0)
+
+TotalCases <- merge(TotalCases , pfprZones@data , all.y = FALSE , by.x = 'District' , by.y = 'District')
+
+MalariaStat <- ddply(TotalCases ,.(District), function(x){
+  data.frame(meanConf  = mean(x$TotConf  , na.rm = T) , 
+             medianConf = median(x$TotConf, na.rm = T) ,
+             meanClin  = mean(x$TotClin, na.rm = T) , 
+             medianClin = median(x$TotClin, na.rm = T))})
+
 
 
 DataPlot    <- merge(MalariaStat, pfprZones@data , all.y = FALSE , by.x = 'District' , by.y = 'District')
-SumDataPlot <- merge(CountCases, pfprZones@data , all.y = FALSE , by.x = 'District' , by.y = 'District')
-
 
 par(mfrow = c(2,2))
-plot(order(DataPlot$ghapfprpop) , order(DataPlot$meanClin) ,
+plot(order(DataPlot$ghapfprpop) , order(DataPlot$medianClin) ,
      xlab = 'Number people with pfp (Rank)' , 
      ylab = 'Mean number clinical malaria (Rank)')
-plot(order(DataPlot$pfpr) , order(DataPlot$meanClin / DataPlot$population),
+plot(order(DataPlot$pfpr) , order(DataPlot$medianClin / DataPlot$population),
      xlab = 'Pfpr (Rank)' , 
      ylab = 'Mean rate clinical malaria (Rank)')
-plot(order(DataPlot$ghapfprpop) , order(DataPlot$meanConf),
+plot(order(DataPlot$ghapfprpop) , order(DataPlot$medianConf),
      xlab = 'Number people with pfp (Rank)' , 
      ylab = 'Mean number confirmed malaria (Rank)')
-plot(order(DataPlot$pfpr) , order(DataPlot$meanConf / DataPlot$population),
+plot(order(DataPlot$pfpr) , order(DataPlot$medianConf / DataPlot$population),
      xlab = 'Pfpr (Rank)' , 
      ylab = 'Mean rate confirmed malaria (Rank)')
+
+summary()
+
 
 ggplot(data = DataPlot ,
        aes(x = pfpr , y = 1000 * 12 * meanClin /(population)  , 
            #size= population  ,
-           col = pfpr , label = District)) + 
+           col = population , label = District)) + 
   geom_text() +
-  theme_bw() + scale_colour_gradient(low="blue" , high = "red") +
-  xlab('Pfpr') + ylab('Incidence rate clinical malaria') 
+  theme_bw() + scale_colour_gradient(low="dark green" , high = "red") +
+  xlab('Pfpr') + ylab('Incidence rate clinical malaria')
 
 ggplot(data = DataPlot ,
        aes(x = pfpr , y = 1000 * 12 * meanConf /(population)  , 
            #size= population  ,
-           col = pfpr , label = District)) + 
+           col = population , label = District)) + 
   geom_text() +
-  theme_bw() + scale_colour_gradient(low="blue" , high = "red") +
+  theme_bw() + scale_colour_gradient(low="dark green" , high = "red") +
   xlab('Pfpr') + ylab('Incidence rate confirmed malaria') 
+
+
+ggplot(data = DataPlot ,
+       aes(x = medianClin , y = medianConf  , 
+           #size= population  ,
+           col = population )) + 
+  geom_point() +
+  theme_bw() + scale_colour_gradient(low="dark green" , high = "red") +
+  xlab('Number Clinical Malaria') + ylab('Incidence rate clinical malaria')
+
+
+fitData <- subset(TotalCases , !is.na(CalMonth))
+ConfModel <- glm(TotConf ~ ghapfprpop  + months(CalMonth), data = fitData , family = quasipoisson )
+plot(ConfModel)
+par(mfrow = c(1,1))
+plot(fitData$TotConf , fitted(ConfModel))
