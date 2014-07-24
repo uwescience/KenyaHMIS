@@ -53,7 +53,7 @@ ggplot(data = TotalCases ,
   geom_point() +
   geom_point(aes(x = ghapfprpop , y = TotConf) , col = "red" )+
   theme_bw() +
-  xlab('Pfpr') + ylab('Incidence rate clinical malaria')
+  ylab('Number of cases in hospital reports (red  = confirmed)') + xlab('Number of people with Pfp')
 
 ##Deleting outliers
 
@@ -64,7 +64,7 @@ ggplot(data = TotalCases ,
   geom_point() +
   geom_point(aes(x = ghapfprpop , y = TotConf) , col = "red" )+
   theme_bw() +
-  xlab('Pfpr') + ylab('Incidence rate clinical malaria')
+  ylab('Number of cases in hospital reports (red  = confirmed)') + xlab('Number of people with Pfp')
 
 ##0 Values are considered missing data...
 
