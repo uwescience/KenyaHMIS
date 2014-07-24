@@ -10,6 +10,7 @@ library(sqlshare)
 library(zoo)
 library(plyr)
 library(ggplot2)
+library(MASS)
 
 setwd("J:/Project/abce/ken/HMIS")
 
@@ -42,9 +43,32 @@ TotalCases <- ddply(MalariaData , .(District , CalMonth) , function(x){
   data.frame(TotConf  = sum(x$Value[x$Indicator == 'confirmed malaria'] , na.rm = TRUE),
              TotClin = sum(x$Value[x$Indicator == 'clinical malaria'] , na.rm = TRUE))})
 
-TotalCases <- subset(TotalCases , TotConf != 0 & TotClin != 0)
 
 TotalCases <- merge(TotalCases , pfprZones@data , all.y = FALSE , by.x = 'District' , by.y = 'District')
+
+###What does the data look like ?
+
+ggplot(data = TotalCases ,
+       aes(x = ghapfprpop , y = TotClin)) + 
+  geom_point() +
+  geom_point(aes(x = ghapfprpop , y = TotConf) , col = "red" )+
+  theme_bw() +
+  xlab('Pfpr') + ylab('Incidence rate clinical malaria')
+
+##Deleting outliers
+
+TotalCases <- subset(TotalCases , TotClin <40000)
+
+ggplot(data = TotalCases ,
+       aes(x = ghapfprpop , y = TotClin)) + 
+  geom_point() +
+  geom_point(aes(x = ghapfprpop , y = TotConf) , col = "red" )+
+  theme_bw() +
+  xlab('Pfpr') + ylab('Incidence rate clinical malaria')
+
+##0 Values are considered missing data...
+
+TotalCases <- subset(TotalCases , !(TotConf == 0 & TotClin == 0))
 
 MalariaStat <- ddply(TotalCases ,.(District), function(x){
   data.frame(meanConf  = mean(x$TotConf  , na.rm = T) , 
@@ -52,26 +76,9 @@ MalariaStat <- ddply(TotalCases ,.(District), function(x){
              meanClin  = mean(x$TotClin, na.rm = T) , 
              medianClin = median(x$TotClin, na.rm = T))})
 
-
+####Ranking of 
 
 DataPlot    <- merge(MalariaStat, pfprZones@data , all.y = FALSE , by.x = 'District' , by.y = 'District')
-
-par(mfrow = c(2,2))
-plot(order(DataPlot$ghapfprpop) , order(DataPlot$medianClin) ,
-     xlab = 'Number people with pfp (Rank)' , 
-     ylab = 'Mean number clinical malaria (Rank)')
-plot(order(DataPlot$pfpr) , order(DataPlot$medianClin / DataPlot$population),
-     xlab = 'Pfpr (Rank)' , 
-     ylab = 'Mean rate clinical malaria (Rank)')
-plot(order(DataPlot$ghapfprpop) , order(DataPlot$medianConf),
-     xlab = 'Number people with pfp (Rank)' , 
-     ylab = 'Mean number confirmed malaria (Rank)')
-plot(order(DataPlot$pfpr) , order(DataPlot$medianConf / DataPlot$population),
-     xlab = 'Pfpr (Rank)' , 
-     ylab = 'Mean rate confirmed malaria (Rank)')
-
-summary()
-
 
 ggplot(data = DataPlot ,
        aes(x = pfpr , y = 1000 * 12 * meanClin /(population)  , 
@@ -82,25 +89,71 @@ ggplot(data = DataPlot ,
   xlab('Pfpr') + ylab('Incidence rate clinical malaria')
 
 ggplot(data = DataPlot ,
-       aes(x = pfpr , y = 1000 * 12 * meanConf /(population)  , 
-           #size= population  ,
+       aes(x = pfpr , y = 1000 * 12 * meanConf /(population)  , ,
            col = population , label = District)) + 
   geom_text() +
   theme_bw() + scale_colour_gradient(low="dark green" , high = "red") +
   xlab('Pfpr') + ylab('Incidence rate confirmed malaria') 
 
 
-ggplot(data = DataPlot ,
-       aes(x = medianClin , y = medianConf  , 
-           #size= population  ,
-           col = population )) + 
-  geom_point() +
-  theme_bw() + scale_colour_gradient(low="dark green" , high = "red") +
-  xlab('Number Clinical Malaria') + ylab('Incidence rate clinical malaria')
-
-
 fitData <- subset(TotalCases , !is.na(CalMonth))
-ConfModel <- glm(TotConf ~ ghapfprpop  + months(CalMonth), data = fitData , family = quasipoisson )
-plot(ConfModel)
-par(mfrow = c(1,1))
-plot(fitData$TotConf , fitted(ConfModel))
+ClinModel <- glm(round(TotClin) ~ ghapfprpop  + months(CalMonth), data = fitData , family = quasipoisson )
+ConfModel <- glm(round(TotConf) ~ log(ghapfprpop)  + months(CalMonth), data = fitData , family = quasipoisson )
+
+par(mfcol = c(4,2))
+
+plot(fitData$TotClin , fitted(ClinModel),
+     xlab = 'Actual data' , ylab = 'Fitted data' , main = 'Clinical - pfpr Model', sub = 'model : OverDisp Poisson' ,
+     xlim = c(0,max(fitData$TotClin) ) , ylim = c(0,max(fitData$TotClin) ) )
+lines(x = c(0,max(fitData$TotClin) ), y = c(0,max(fitData$TotClin ) ) , col = 'red')
+
+plot(fitData$TotConf , fitted(ConfModel) ,
+     xlab = 'Actual data' , ylab = 'Fitted data' , main = 'Confirmed - pfpr Model', sub = 'model : OverDisp Poisson' ,
+     xlim = c(0,max(fitData$TotConf) ) , ylim = c(0,max(fitData$TotConf) ) )
+lines(x = c(0,max(fitData$TotConf) ), y = c(0,max(fitData$TotConf ) ) , col = 'red')
+
+ClinModelNB <- glm.nb(round(TotClin) ~ log(ghapfprpop)  + months(CalMonth), data = fitData )
+ConfModelNB <- glm.nb(round(TotConf) ~ log(ghapfprpop)  + months(CalMonth), data = fitData )
+
+
+plot(fitData$TotClin , fitted(ClinModelNB),
+     xlab = 'Actual data' , ylab = 'Fitted data' , main = 'Clinical - pfpr Model' , sub = 'model : Negative Binomial' ,
+     xlim = c(0,max(fitData$TotClin) ) , ylim = c(0,max(fitData$TotClin) ) )
+lines(x = c(0,max(fitData$TotClin) ), y = c(0,max(fitData$TotClin ) ) , col = 'red')
+
+plot(fitData$TotConf , fitted(ConfModelNB),
+     xlab = 'Actual data' , ylab = 'Fitted data' , main = 'Clinical - pfpr Model', sub = 'model : Negative Binomial' , 
+     xlim = c(0,max(fitData$TotConf) ) , ylim = c(0,max(fitData$TotConf) ) )
+lines(x = c(0,max(fitData$TotConf) ), y = c(0,max(fitData$TotConf ) ) , col = 'red')
+
+
+###Models with district instead of pfprpop
+
+ClinModelDist <- glm(round(TotClin) ~ District  + months(CalMonth), data = fitData , family = quasipoisson )
+ConfModelDist <- glm(round(TotConf) ~ District  + months(CalMonth), data = fitData , family = quasipoisson )
+
+plot(fitData$TotClin , fitted(ClinModelDist),
+     xlab = 'Actual data' , ylab = 'Fitted data' , main = 'Clinical - District Model' , sub = 'model : OverDisp Poisson' ,
+     xlim = c(0,max(fitData$TotClin) ) , ylim = c(0,max(fitData$TotClin) ) )
+lines(x = c(0,max(fitData$TotClin) ), y = c(0,max(fitData$TotClin ) ) , col = 'red')
+
+plot(fitData$TotConf , fitted(ConfModelDist),
+     xlab = 'Actual data' , ylab = 'Fitted data' , main = 'Confirmed - District Model' , sub = 'model : OverDisp Poisson' ,
+     xlim = c(0,max(fitData$TotConf) ) , ylim = c(0,max(fitData$TotConf) ) )
+lines(x = c(0,max(fitData$TotConf) ), y = c(0,max(fitData$TotConf ) ) , col = 'red')
+
+
+
+
+ClinModelDistNB <- glm.nb(round(TotClin) ~ District  + months(CalMonth), data = fitData)
+ConfModelDistNB <- glm.nb(round(TotConf) ~ District  + months(CalMonth), data = fitData)
+
+plot(fitData$TotClin , fitted(ClinModelDistNB),
+     xlab = 'Actual data' , ylab = 'Fitted data' , main = 'Clinical - District Model' , sub = 'model : Negative Binomial' ,
+     xlim = c(0,max(fitData$TotClin) ) , ylim = c(0,max(fitData$TotClin) ) )
+lines(x = c(0,max(fitData$TotClin) ), y = c(0,max(fitData$TotClin ) ) , col = 'red')
+
+plot(fitData$TotConf , fitted(ConfModelDistNB),
+     xlab = 'Actual data' , ylab = 'Fitted data' , main = 'Confirmed - District Model' , sub = 'model : Negative Binomial' ,
+     xlim = c(0,max(fitData$TotConf) ) , ylim = c(0,max(fitData$TotConf) ) )
+lines(x = c(0,max(fitData$TotConf) ), y = c(0,max(fitData$TotConf ) ) , col = 'red')
