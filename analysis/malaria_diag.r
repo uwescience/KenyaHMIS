@@ -70,11 +70,13 @@ ratio_clinic_confirm <- merge(ratio_clinic_confirm, zones@data)
 
 qplot(data = ratio_clinic_confirm , x = clinic , y = ratio , col = Cohort)+
   facet_wrap(~District) + theme_bw() +
-  geom_hline(aes(yintercept = mean))
+  geom_hline(aes(yintercept = mean)) + 
+  xlab('Number of clinical diagnosis') + ylab('Confirmation ratio')
   
 qplot(data = ratio_clinic_confirm , x = CalMonth , y = ratio , col = Cohort)+
   facet_wrap(~District) + theme_bw()+
-  geom_hline(aes(yintercept = mean))
+  geom_hline(aes(yintercept = mean))+ 
+  xlab('Time') + ylab('Confirmation ratio')
 
 ratio_clinic_confirm$Month <- months(ratio_clinic_confirm$CalMonth)
 
