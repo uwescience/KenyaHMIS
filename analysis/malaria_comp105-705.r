@@ -63,7 +63,7 @@ MakeDate <- function(x){
   subset(x , !is.na(CalMonth))
 }
 
-Data705 <- SelectData(MakeDate(MalariaData) ,"confirmed malaria")
+Data705 <- SelectData(MakeDate(MalariaData) ,"clinical malaria")
 Data105 <- SelectData(MakeDate(Malaria105) ,  "treated malaria")
 
 ####Summing and trimming Malaria cases accross each data set
@@ -123,38 +123,23 @@ qplot(data = CorrByDistrict , x = District , y = corr , geom = 'bar' , stat = 'i
   scale_fill_gradient(low="grey" , high = "dark red")
 
 
+## Looking at what these series look like
 
-goodCorrDist <- as.character(corrMal705vs105$District[corrMal705vs105$corr >= 0.7])
-medCorrDist <- as.character(corrMal705vs105$District[corrMal705vs105$corr < 0.7 & corrMal705vs105$corr >= 0.5])
-badCorrDist <- as.character(corrMal705vs105$District[corrMal705vs105$corr < 0.5 & corrMal705vs105$corr >= 0])
-negCorrDist <- as.character(corrMal705vs105$District[corrMal705vs105$corr < 0])
+CorrByDistrict$LevCorr[CorrByDistrict$corr >= 0.7] <- "[0.7 , 1]"
+CorrByDistrict$LevCorr[CorrByDistrict$corr < 0.7 & CorrByDistrict$corr >= 0.5] <- "[0.5 - 0.7["
+CorrByDistrict$LevCorr[CorrByDistrict$corr < 0.5 & CorrByDistrict$corr >= 0] <- "[0 - 0.5["
+CorrByDistrict$LevCorr[CorrByDistrict$corr < 0] <- "[-1 , 0]"
 
+table(CorrByDistrict$LevCorr)
 
+SummedCompile <- merge(rbind(Summed105 , Summed705) , CorrByDistrict , all.x = FALSE)
 
+SummedCompile$District <- factor(as.character(SummedCompile$District) , 
+                                levels = as.character(SummedCompile$District)[order(SummedCompile$corr)])
 
-
-
-####Looking at it
-
-NValDist <- ddply(Summed105 , .(District) , function(x) nrow(x[x$Value != 0 ,]))
-SufficientDataDist <- subset(NValDist , V1 > 21)
-
-Summed105 <- subset(Summed105 , District %in% SufficientDataDist$District)
-Summed105$District <- as.character(Summed105$District)
-
-qplot(data = Summed105[Summed105$Indicator != "treated malaria" ,] , x = CalMonth , y = Value , col = Indicator , geom = 'line') +
-  facet_wrap(~District , scales = "free")
-ComparePlot <- rbind(data.frame(subset(Summed105 ,
-                                       Indicator == "treated malaria"), 
-                                Source = "105 Report") ,
-                     data.frame(subset(MalariaData , 
-                                       Indicator %in% c('clinical malaria' , 'confirmed malaria') ,
-                                       select = c(Indicator , CalMonth , District , Value , Cohort)
-                     ) , Source = "705 Reports")
-)
-
-ComparePlot <- subset(ComparePlot , !is.na(CalMonth) & !is.na(Value))
-
-ggplot(data = ComparePlot , aes(x = CalMonth , y = Value , colour = Indicator , linetype = Cohort) )+ 
-  geom_line() +
-  facet_wrap(~District , scales = "free_y") + theme_bw()
+ggplot(data = SummedCompile,aes(x=CalMonth, y = totalCases)) + 
+  geom_rect(data = SummedCompile ,aes(fill = LevCorr),xmin = -Inf,xmax = Inf,
+            ymin = -Inf,ymax = Inf,alpha = 0.3) +
+  geom_line(aes(linetype = Indicator)) + 
+  facet_wrap( ~ District , scales = 'free_y') + 
+  scale_fill_brewer(palette="Greens")
