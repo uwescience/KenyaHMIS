@@ -17,6 +17,8 @@ library(lme4)
 setwd("J:/Project/abce/ken/HMIS")
 
 
+##Loading and formatting data
+
 zones <- readShapePoly("data/pfprInZones.shp")
 MalariaDataPed <- fetch.data.frame('select District , Value , Year , Month , Indicator
                                  FROM [grlurton@washington.edu].[705ADataClean]
@@ -40,13 +42,7 @@ Malaria105 <- fetch.data.frame('select District , Value , Year , Month , Level ,
 
 MalariaDataAdult$Cohort <- "> 5 years"
 MalariaDataPed$Cohort <- "< 5 years"
-
 MalariaData <- rbind(MalariaDataAdult , MalariaDataPed)
-MalariaData$CalMonth <- as.Date(as.yearmon(paste(MalariaData$Month , MalariaData$Year  , sep = '-') , "%B-%Y"))
-MalariaData <- subset(MalariaData, !is.na(Value) & !is.na(CalMonth) & District %in% zones@data$District)
-
-Malaria105$CalMonth <- as.Date(as.yearmon(paste(Malaria105$Month , Malaria105$Year  , sep = '-') , "%B-%Y"))
-Malaria105 <- subset(Malaria105 , !is.na(Value) & !is.na(CalMonth) & District %in% zones@data$District)
 
 Malaria105$Cohort[Malaria105$Indicator == "number of under five years treated for malaria"] <- "< 5 years"
 Malaria105$Cohort[Malaria105$Indicator == "number of patients over five years treated for malaria"] <- "> 5 years"
@@ -56,59 +52,77 @@ Malaria105$Indicator[Malaria105$Indicator == "number of under five years treated
   Malaria105$Indicator[Malaria105$Indicator == "number of patients over five years treated for malaria"] <-
   "treated malaria"
 
-MalariaCases105 <- subset(Malaria105 , Indicator == "treated malaria")
-MalariaCases705 <- subset(MalariaData , Indicator == "confirmed malaria")
-####Summing Malaria cases accross each data set
+###Select relevant data
 
-Summed705 <- ddply(MalariaCases705 , .(District , CalMonth , Indicator) , 
-                   function(x){
-                     data.frame(totalCases = sum(x$Value , na.rm = TRUE))
-                   },
-                   .progress = 'text')
+SelectData <- function(data , indicator){
+  subset(data , !is.na(Value) &  District %in% zones@data$District & Indicator == indicator)
+}
 
+MakeDate <- function(x){
+  x$CalMonth <- as.Date(as.yearmon(paste(x$Month , x$Year  , sep = '-') , "%B-%Y"))
+  subset(x , !is.na(CalMonth))
+}
 
-Summed105 <- ddply(MalariaCases105 , .(District , CalMonth , Indicator) , 
-                   function(x){
-                     data.frame(totalCases = sum(x$Value , na.rm = TRUE))
-                   }, .progress = 'text')
+Data705 <- SelectData(MakeDate(MalariaData) ,"confirmed malaria")
+Data105 <- SelectData(MakeDate(Malaria105) ,  "treated malaria")
 
-trimmed705 <- ddply(Summed705 , .(District) , 
-                         function(x){
-                           subset(x , !(totalCases %in% boxplot.stats(totalCases)$out))
-                         })
+####Summing and trimming Malaria cases accross each data set
 
-trimmed105 <- ddply(Summed105 , .(District) , 
-                         function(x){
-                           subset(x , !(totalCases %in% boxplot.stats(totalCases)$out))
-                         })
+SumData <- function(data){
+  ddply(data , .(District , CalMonth , Indicator) , 
+        function(x){
+          data.frame(totalCases = sum(x$Value , na.rm = TRUE))
+        },
+        .progress = 'text')
+}
 
+Summed705 <- SumData(Data705)
+Summed105 <- SumData(Data105)
+
+TrimData <- function(data){
+  ddply(data , .(District) , 
+        function(x){
+          subset(x , !(totalCases %in% boxplot.stats(totalCases)$out))
+        })
+}
+
+trimmed705 <-  TrimData(Summed705)
+trimmed105 <-  TrimData(Summed105)
+
+#### Looking at correlation between the two series
 
 corMatrix <- merge(trimmed105[,-3] , trimmed705[,-3] , by = c("District", 'CalMonth') , all = FALSE)
+colnames(corMatrix)[3:4] <- c('TreatedCases' , 'ClinicalCases')
 
+MakeCorrMatrix <- function(data){
+  Corr <- ddply(corMatrix , .(District) ,
+                function(x){
+                  data.frame(corr = cor(x$TreatedCases , x$ClinicalCases))
+                }
+                )
+  subset(Corr , !is.na(corr))  
+}
 
-corrMal705vs105 <- ddply(corMatrix , .(District) , 
-                         function(x){
-                           data.frame(corr = cor(x$totalCases.x , x$totalCases.y))
-                         }
-                         )
+CorrByDistrict <- MakeCorrMatrix(corMatrix)
 
-corrMal705vs105 <- subset(corrMal705vs105 , !is.na(corr))
-
-nValues <- ddply(Summed105 , .(District) , 
+nValues <- ddply(corMatrix , .(District) , 
                  function(x){
                    data.frame(Nobs = nrow(x))
                  }
                  )
 
+CorrByDistrict <- merge(CorrByDistrict , nValues)
 
-corrMal705vs105 <- merge(corrMal705vs105 , nValues)
 
-corrMal705vs105$District <- factor(as.character(corrMal705vs105$District) , 
-                                   levels = as.character(corrMal705vs105$District)[order(corrMal705vs105$corr)])
+##ordering districts for plotting
+CorrByDistrict$District <- factor(as.character(CorrByDistrict$District) , 
+                                   levels = as.character(CorrByDistrict$District)[order(CorrByDistrict$corr)])
 
-qplot(data = corrMal705vs105 , x = District , y = corr , geom = 'bar' , stat = 'identity' , fill = Nobs) +
+qplot(data = CorrByDistrict , x = District , y = corr , geom = 'bar' , stat = 'identity' , fill = Nobs) +
   coord_flip() + theme_bw() + ylab('Correlation between Clinical Malaria in 705 and Treated Malaria in 105') +
   scale_fill_gradient(low="grey" , high = "dark red")
+
+
 
 goodCorrDist <- as.character(corrMal705vs105$District[corrMal705vs105$corr >= 0.7])
 medCorrDist <- as.character(corrMal705vs105$District[corrMal705vs105$corr < 0.7 & corrMal705vs105$corr >= 0.5])
