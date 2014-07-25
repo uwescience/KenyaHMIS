@@ -1,3 +1,10 @@
+#### This program looks at how malaria diagnosis is made in facilities and how it varies between facilities.
+#### Additional question is how this may finally act upon evaluation of care in facilities
+
+## Author : Grégoire Lurton
+## Date   : July 2014
+
+
 library(sqlshare)
 library(plyr)
 library(ggplot2)
@@ -39,6 +46,8 @@ MalariaData$CalMonth <- as.Date(as.yearmon(paste(MalariaData$Month , MalariaData
 Malaria105$CalMonth <- as.Date(as.yearmon(paste(Malaria105$Month , Malaria105$Year  , sep = '-') , "%B-%Y"))
 
 
+### Computing the confirmation ratio
+
 ratio_clinic_confirm <- ddply(MalariaData , .( CalMonth , District , Cohort) ,
                               function(x){
                                 print(x$District)
@@ -56,7 +65,8 @@ colnames(meanRatio)[2] <- "mean"
 meanRatio$District <- ordered(meanRatio$District , levels = meanRatio$District[order(meanRatio$mean)])
 
 
-ratio_clinic_confirm <- merge(meanRatio , ratio_clinic_confirm)
+ratio_clinic_confirm <- merge(meanRatio , ratio_clinic_confirm )
+ratio_clinic_confirm <- merge(ratio_clinic_confirm, zones@data)
 
 qplot(data = ratio_clinic_confirm , x = clinic , y = ratio , col = Cohort)+
   facet_wrap(~District) + theme_bw() +
@@ -66,53 +76,45 @@ qplot(data = ratio_clinic_confirm , x = CalMonth , y = ratio , col = Cohort)+
   facet_wrap(~District) + theme_bw()+
   geom_hline(aes(yintercept = mean))
 
-Summed105 <- ddply(Malaria105 , .(District , CalMonth , Indicator) , 
-                         function(x) sum(x$Value , na.rm = T) , .progress = 'text')
-colnames(Summed105)[4] <- 'Value'
+ratio_clinic_confirm$Month <- months(ratio_clinic_confirm$CalMonth)
 
+ratio_clinic_confirm <- subset(ratio_clinic_confirm, !is.na(Month))
 
-Summed105$Cohort[Summed105$Indicator == "number of under five years treated for malaria"] <- "< 5 years"
-Summed105$Cohort[Summed105$Indicator == "number of patients over five years treated for malaria"] <- "> 5 years"
-
-Summed105$Indicator <- as.character(Summed105$Indicator)
-Summed105$Indicator[Summed105$Indicator == "number of under five years treated for malaria"] <-
-  Summed105$Indicator[Summed105$Indicator == "number of patients over five years treated for malaria"] <-
-  "treated malaria"
-
-ComparePlot <- rbind(data.frame(subset(Summed105 ,
-                                       Indicator == "treated malaria"), 
-                                Source = "105 Report") ,
-                     data.frame(subset(MalariaData , 
-                            Indicator %in% c('clinical malaria' , 'confirmed malaria') ,
-                            select = c(Indicator , CalMonth , District , Value , Cohort)
-                            ) , Source = "705 Reports")
-                     )
-
-ComparePlot <- subset(ComparePlot , !is.na(CalMonth) & !is.na(Value))
-
-ggplot(data = ComparePlot , aes(x = CalMonth , y = Value , colour = Indicator , linetype = Cohort) )+ 
-  geom_line() +
-  facet_wrap(~District , scales = "free_y") + theme_bw()
-  
+qplot(data = ratio_clinic_confirm , x = pfpr , y = ratio)+
+  theme_bw() + facet_wrap(~Month)
 
 
 
-fit <- lmer(ratio ~ log(clinic)*District + Cohort + (1|District), data = ratio_clinic_confirm)
-
-plot(ratio_clinic_confirm$ratio  , fitted(fit))
-lines(x = c(0,1) , y = c(0,1) , col = 'red')
 
 
-LargeMalariaValue <- dcast(MalariaData , CalMonth + District ~ Indicator , value.var = "Value" ,fun.aggregate = function(x) max(x , na.rm = TRUE))
+#####Modelisation
+
+##Model 1 : what influences the confirmation ratio
+
+ratio_clinic_confirm$District <- factor(ratio_clinic_confirm$District, ordered =  FALSE)
+
+summary(lmer(ratio ~ log(population) + pfpr + Month:District + Month + (1|District), 
+            data = ratio_clinic_confirm ) )
+
+LargeMalariaValue <- dcast(MalariaData , CalMonth + District ~ Indicator , value.var = "Value" ,
+                           fun.aggregate = function(x) max(x , na.rm = TRUE))
 colnames(LargeMalariaValue) <- c("CalMonth","District","clinMal","ConfMal","pneumonia","typhoid")
 
-forFit <- subset(LargeMalariaRate , !is.na(pneumonia) & !is.na(clinMal) 
+
+
+
+
+
+##Model 2 : does high clinical diagnosis / low confirmation influence the 
+## diagnostic of other conditions like pneumonia or typhoid
+
+forFit <- subset(LargeMalariaValue , !is.na(pneumonia) & !is.na(clinMal) 
                  & is.finite(clinMal) & !is.nan(clinMal))
 
+fit <- glm(pneumonia ~ clinMal + District , data = forFit , #offset = log(population) ,
+           family = quasipoisson)
 
-fit <- lm(pneumonia ~ clinMal:District, data = forFit)
-
-LargeMalariaRate <- dcast(MalariaData , CalMonth + District ~ Indicator , value.var = "Rate" ,fun.aggregate = function(x) max(x , na.rm = TRUE))
+LargeMalariaRate <- dcast(ratio_clinic_confirm , CalMonth + District ~ Indicator , value.var = "Rate" ,fun.aggregate = function(x) max(x , na.rm = TRUE))
 colnames(LargeMalariaRate) <- c("CalMonth","District","clinMal","ConfMal","pneumonia","typhoid")
 
 qplot(data = LargeMalariaRate ,x = clinMal, y = pneumonia , col = District)+
