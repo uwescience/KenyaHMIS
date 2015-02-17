@@ -41,9 +41,6 @@ write.csv(extracted_kenya , 'data_kenya.csv')
 
 save.image('kenya_initial_extraction.rdata')
 
-load('kenya_initial_extraction.RData')
-
-
 ### Making shapefiles ###
 
 shapefiles <- extract_geolocalisation(org_units_description)
