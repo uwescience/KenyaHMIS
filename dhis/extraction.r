@@ -28,13 +28,13 @@ setwd('../../../Desktop')
 write.csv(data_sets , 'data_sets.csv')
 write.csv(data_elements , 'data_elements.csv')
 write.csv(data_categories , 'data_categories.csv')
-write.csv(org_units , 'data_elements.csv')
+write.csv(org_units , 'org_units.csv')
 write.csv(org_units_data_sets , 'org_units_data_sets.csv')
 write.csv(org_units_groups, 'org_units_groups.csv')
 write.csv(org_units_description, 'org_units_description.csv')
 
 
-write.csv(extracted_kenya , 'kenya_inital_extract.csv')
+write.csv(extracted_kenya , 'data_kenya.csv')
 
 save.image('kenya_initial_extraction.rdata')
 
