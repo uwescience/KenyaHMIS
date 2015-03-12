@@ -5,6 +5,7 @@ import sys
 import struct
 import csv
 
+# here's a change
 def combine_paths(directory, files):
     return (os.path.join(directory, filename) for filename in files)
 
