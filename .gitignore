@@ -9,3 +9,5 @@ archive
 litt
 app
 kenyahmis.Rproj
+.ipynb_checkpoints/
+malariaMap.RData
