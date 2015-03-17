@@ -2,7 +2,7 @@
 #### It outputs a shapefile of the zones defined from DHIS orgunits with data and pfpr and population
 
 
-## Author : Grégoire Lurton
+## Author : Gr?goire Lurton
 ##          Cropping part of the code adapted from Tom Fleming and Nick Graetz
 ## Date   : July 2014
 
@@ -33,7 +33,7 @@ KenyaPop <- crop(popData,zones)
 Kenyapfpr <- crop(pfprData,KenyaPop)
 
 save.image(file = 'addata/CroppedPfpr.rdata')
-
+#load(file = 'addata/CroppedPfpr.rdata')
 formatNames <- function(x){
   tolower(str_trim(as.character(x)))
 }
